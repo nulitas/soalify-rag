@@ -1,0 +1,14 @@
+fastapi
+python-multipart
+pydantic
+pypdf
+langchain-ollama
+langchain-community
+langchain-text-splitters
+langchain-chroma
+langchain-core
+langchain
+langchain-huggingface
+python-dotenv
+chromadb
+huggingface-hub
