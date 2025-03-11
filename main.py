@@ -17,7 +17,6 @@ from langchain.prompts import ChatPromptTemplate
 from utils import (
     query_rag, 
     get_embedding_function, 
-    extract_questions_and_answers,
     get_prompt_template,
     get_similarity_search,
     direct_llm_questions,

@@ -1,6 +1,5 @@
 import argparse
 import time
-import re
 import os
 
 from typing import List, Tuple
@@ -13,12 +12,13 @@ from langchain_core.documents import Document
 
 from get_embedding_function import get_embedding_function
 
-CHROMA_PATH =  os.getenv("CHROMA_PATH")
+CHROMA_PATH = os.getenv("CHROMA_PATH")
 DATA_PATH = os.getenv("DATA_PATH")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL")
 URL_PATH = os.getenv("URL_PATH")
 TOP_K_RESULTS = 3
 TIMEOUT = 60
+
 def get_prompt_template(num_questions):
     template = """
 Kamu adalah guru profesional yang ahli membuat soal ujian berkualitas tinggi.
@@ -50,8 +50,10 @@ Pertanyaan {i}: [Pertanyaan spesifik dan mendalam]
 Jawaban {i}: [Jawaban singkat dan faktual]
 """
     template += """
-PENTING: Pastikan untuk menghasilkan BAIK pertanyaan MAUPUN jawaban untuk SEMUA {num_questions} soal yang diminta.
-Jika tidak bisa membuat pertanyaan dan jawaban, respon dengan "Tidak dapat membuat soal dari dokumen ini."
+PENTING: 
+- Pastikan untuk menghasilkan BAIK pertanyaan MAUPUN jawaban untuk SEMUA {num_questions} soal yang diminta.
+- Jika tidak bisa membuat pertanyaan dan jawaban, respon dengan "Tidak dapat membuat soal dari dokumen ini."
+- JANGAN tambahkan penjelasan, komentar, atau teks tambahan di luar format yang ditentukan.
 """
     return template
 
@@ -70,19 +72,6 @@ def get_similarity_search(
     except Exception as e:
         print(f"Error in similarity search: {e}")
         return []
-
-def extract_questions_and_answers(response: str, num_questions: int) -> str:
-    try:
-        clean_response = response.strip()
-        if "Pertanyaan" in clean_response and "Jawaban" in clean_response:
-            if num_questions == 1:
-                clean_response = re.sub(r'Pertanyaan\s+\d+:', 'Pertanyaan:', clean_response)
-                clean_response = re.sub(r'Jawaban\s+\d+:', 'Jawaban:', clean_response)
-            return clean_response
-        return response
-    except Exception as e:
-        print(f"Error extracting questions and answers: {e}")
-        return response
 
 def query_rag(
     query_text: str, 
@@ -115,17 +104,9 @@ def query_rag(
         prompt = prompt_template.format(context=context_text, num_questions=num_questions)
 
         response_text = model.invoke(prompt)
-        cleaned_response = extract_questions_and_answers(response_text, num_questions)
-
-        sources = [doc.metadata.get("source", "Unknown") for doc, _score in results]
         
-        formatted_response = (
-            f"Response:\n{cleaned_response}\n\n"
-            f"Search Time: {time.time() - start_time:.2f} seconds"
-        )
-        
-        print(formatted_response)
-        return cleaned_response
+        print(f"Total processing time: {time.time() - start_time:.2f} seconds")
+        return response_text
     
     except Exception as e:
         print(f"Error in RAG query: {e}")
@@ -133,7 +114,6 @@ def query_rag(
     
 def direct_llm_questions(query_text: str, num_questions: int = 1) -> str:
     try:
-        import time
         start_time = time.time()
         
         model = OllamaLLM(
@@ -152,15 +132,13 @@ def direct_llm_questions(query_text: str, num_questions: int = 1) -> str:
         prompt = prompt_template.format(query_text=query_text, num_questions=num_questions)
         
         response_text = model.invoke(prompt)
-        cleaned_response = extract_questions_and_answers(response_text, num_questions)
         
         print(f"LLM generation took {time.time() - start_time:.2f} seconds")
-        return cleaned_response
+        return response_text
     
     except Exception as e:
         print(f"Error generating direct questions: {e}")
         return "There was an error in making the question."
-
 
 def main():
     parser = argparse.ArgumentParser(description="RAG Query Assistant")
