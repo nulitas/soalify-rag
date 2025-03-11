@@ -1,8 +1,9 @@
 import argparse
 import time
 import os
+import json
 
-from typing import List, Tuple
+from typing import List, Tuple, Dict, Any
 from dotenv import load_dotenv
 
 from langchain_chroma import Chroma
@@ -32,28 +33,25 @@ Kriteria Pembuatan Soal:
 Konteks Dokumen:
 {context}
 
-Format Wajib Dihasilkan:
-"""
-    if num_questions == 1:
-        template += """
-Pertanyaan: [Pertanyaan spesifik dan mendalam]
-Jawaban: [Jawaban singkat dan faktual]
-"""
-    else:
-        template += """
-Untuk setiap pasangan soal, gunakan format berikut dan beri nomor untuk setiap pasangan:
-
-"""
-        for i in range(1, min(3, num_questions + 1)):
-            template += f"""
-Pertanyaan {i}: [Pertanyaan spesifik dan mendalam]
-Jawaban {i}: [Jawaban singkat dan faktual]
-"""
-    template += """
 PENTING: 
-- Pastikan untuk menghasilkan BAIK pertanyaan MAUPUN jawaban untuk SEMUA {num_questions} soal yang diminta.
-- Jika tidak bisa membuat pertanyaan dan jawaban, respon dengan "Tidak dapat membuat soal dari dokumen ini."
-- JANGAN tambahkan penjelasan, komentar, atau teks tambahan di luar format yang ditentukan.
+- Output harus dalam format JSON valid yang dapat diparse oleh Python
+- Jangan sertakan penjelasan atau teks apapun di luar format JSON
+- Jika tidak bisa membuat soal dari dokumen, hasilkan JSON dengan pesan error
+
+Format JSON yang dihasilkan harus sebagai berikut:
+{{
+  "questions": [
+    {{
+      "question": "Pertanyaan 1 yang spesifik dan mendalam",
+      "answer": "Jawaban 1 yang singkat dan faktual"
+    }},
+    ...
+  ],
+  "metadata": {{
+    "count": {num_questions},
+    "status": "success"
+  }}
+}}
 """
     return template
 
@@ -78,7 +76,7 @@ def query_rag(
     num_questions: int = 1,
     embedding_function=None, 
     model=None
-) -> str:
+) -> Dict[str, Any]:
     if embedding_function is None:
         embedding_function = get_embedding_function()
     
@@ -93,7 +91,15 @@ def query_rag(
         results = get_similarity_search(query_text, embedding_function)
         
         if not results:
-            return "Unable to find relevant documents."
+            return {
+                "questions": [],
+                "metadata": {
+                    "count": 0,
+                    "status": "error",
+                    "message": "Unable to find relevant documents."
+                }
+            }
+            
         context_text = "\n\n---\n\n".join([
             doc.page_content for doc, _score in results
         ])
@@ -106,13 +112,22 @@ def query_rag(
         response_text = model.invoke(prompt)
         
         print(f"Total processing time: {time.time() - start_time:.2f} seconds")
-        return response_text
+        
+        json_output = parse_json_from_llm_response(response_text)
+        return json_output
     
     except Exception as e:
         print(f"Error in RAG query: {e}")
-        return "An error occurred in processing the query."
+        return {
+            "questions": [],
+            "metadata": {
+                "count": 0,
+                "status": "error",
+                "message": f"An error occurred in processing the query: {str(e)}"
+            }
+        }
     
-def direct_llm_questions(query_text: str, num_questions: int = 1) -> str:
+def direct_llm_questions(query_text: str, num_questions: int = 1) -> Dict[str, Any]:
     try:
         start_time = time.time()
         
@@ -134,11 +149,59 @@ def direct_llm_questions(query_text: str, num_questions: int = 1) -> str:
         response_text = model.invoke(prompt)
         
         print(f"LLM generation took {time.time() - start_time:.2f} seconds")
-        return response_text
+        
+        json_output = parse_json_from_llm_response(response_text)
+        return json_output
     
     except Exception as e:
         print(f"Error generating direct questions: {e}")
-        return "There was an error in making the question."
+        return {
+            "questions": [],
+            "metadata": {
+                "count": 0,
+                "status": "error",
+                "message": f"There was an error in making the question: {str(e)}"
+            }
+        }
+
+def parse_json_from_llm_response(response_text: str) -> Dict[str, Any]:
+    """Extract and parse JSON from LLM response text."""
+    try:
+        return json.loads(response_text)
+    except json.JSONDecodeError:
+        try:
+            if "```json" in response_text:
+                json_parts = response_text.split("```json")
+                if len(json_parts) > 1:
+                    json_content = json_parts[1].split("```")[0].strip()
+                    return json.loads(json_content)
+            
+            start_idx = response_text.find('{')
+            end_idx = response_text.rfind('}')
+            
+            if start_idx != -1 and end_idx != -1:
+                json_str = response_text[start_idx:end_idx+1]
+                return json.loads(json_str)
+            
+            return {
+                "questions": [],
+                "metadata": {
+                    "count": 0,
+                    "status": "error",
+                    "message": "Failed to parse JSON from LLM response."
+                }
+            }
+        except Exception as e:
+            print(f"Error parsing JSON: {e}")
+            print(f"Raw response: {response_text}")
+            return {
+                "questions": [],
+                "metadata": {
+                    "count": 0,
+                    "status": "error",
+                    "message": f"Failed to parse JSON from LLM response: {str(e)}"
+                }
+            }
 
 def main():
     parser = argparse.ArgumentParser(description="RAG Query Assistant")
@@ -147,7 +210,8 @@ def main():
                         help="Number of question-answer pairs to generate (default: 1)")
     args = parser.parse_args()
     
-    query_rag(args.query_text, args.num_questions)
+    result = query_rag(args.query_text, args.num_questions)
+    print(json.dumps(result, ensure_ascii=False, indent=2))
 
 if __name__ == "__main__":
     main()
