@@ -1,97 +1,22 @@
 import argparse
 import time
-import os
 import json
 
 from typing import List, Tuple, Dict, Any
-from dotenv import load_dotenv
 
 from langchain_chroma import Chroma
 from langchain_ollama import OllamaLLM
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.documents import Document
 
+from get_prompt_template import get_prompt_template
 from get_embedding_function import get_embedding_function
-
-CHROMA_PATH = os.getenv("CHROMA_PATH")
-DATA_PATH = os.getenv("DATA_PATH")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL")
-URL_PATH = os.getenv("URL_PATH")
-TOP_K_RESULTS = 3
-TIMEOUT = 60
-
-def get_prompt_template(num_questions):
-    if num_questions == 1:
-        template = """
-Kamu adalah guru profesional yang ahli membuat soal ujian berkualitas tinggi.
-
-Kriteria Pembuatan Soal:
-- Hasilkan TEPAT 1 pasangan pertanyaan dan jawaban
-- Pertanyaan harus mendalam dan menguji pemahaman konseptual
-- Jawaban singkat, akurat, dan berbasis dokumen (maks 3 kalimat)
-- Gunakan Bahasa Indonesia yang baku dan jelas
-
-Konteks Dokumen:
-{context}
-
-PENTING: 
-- Output harus dalam format JSON valid yang dapat diparse oleh Python
-- Jangan sertakan penjelasan atau teks apapun di luar format JSON
-- Jika tidak bisa membuat soal dari dokumen, hasilkan JSON dengan pesan error
-
-Format JSON yang dihasilkan harus sebagai berikut:
-{{
-  "questions": [
-    {{
-      "question": "Pertanyaan yang spesifik dan mendalam",
-      "answer": "Jawaban yang singkat dan faktual"
-    }}
-  ],
-  "metadata": {{
-    "count": 1,
-    "status": "success"
-  }}
-}}
-"""
-    else:
-        template = """
-Kamu adalah guru profesional yang ahli membuat soal ujian berkualitas tinggi.
-
-Kriteria Pembuatan Soal:
-- Hasilkan TEPAT {num_questions} pasangan pertanyaan dan jawaban
-- Pertanyaan harus mendalam dan menguji pemahaman konseptual
-- Jawaban singkat, akurat, dan berbasis dokumen (maks 3 kalimat)
-- Gunakan Bahasa Indonesia yang baku dan jelas
-
-Konteks Dokumen:
-{context}
-
-PENTING: 
-- Output harus dalam format JSON valid yang dapat diparse oleh Python
-- Jangan sertakan penjelasan atau teks apapun di luar format JSON
-- Jika tidak bisa membuat soal dari dokumen, hasilkan JSON dengan pesan error
-
-Format JSON yang dihasilkan harus sebagai berikut:
-{{
-  "questions": [
-    {{
-      "question": "Pertanyaan 1 yang spesifik dan mendalam",
-      "answer": "Jawaban 1 yang singkat dan faktual"
-    }},
-    ...
-  ],
-  "metadata": {{
-    "count": {num_questions},
-    "status": "success"
-  }}
-}}
-"""
-    return template
+from var import (OLLAMA_MODEL, CHROMA_PATH)
 
 def get_similarity_search(
     query_text: str, 
     embedding_function, 
-    top_k: int = TOP_K_RESULTS
+    top_k: int = 3
 ) -> List[Tuple[Document, float]]:
     try:
         start_time = time.time()
@@ -116,7 +41,7 @@ def query_rag(
     if model is None:
         model = OllamaLLM(
             model=OLLAMA_MODEL, 
-            timeout=TIMEOUT
+            timeout=60
         )
     
     try:
@@ -166,7 +91,7 @@ def direct_llm_questions(query_text: str, num_questions: int = 1) -> Dict[str, A
         
         model = OllamaLLM(
             model=OLLAMA_MODEL,
-            timeout=TIMEOUT
+            timeout=60
         )
         
         prompt_template_str = get_prompt_template(num_questions)
@@ -200,6 +125,7 @@ def direct_llm_questions(query_text: str, num_questions: int = 1) -> Dict[str, A
 def parse_json_from_llm_response(response_text: str) -> Dict[str, Any]:
     """Extract and parse JSON from LLM response text."""
     try:
+        
         return json.loads(response_text)
     except json.JSONDecodeError:
         try:

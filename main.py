@@ -20,11 +20,13 @@ from utils import (
     get_prompt_template,
     get_similarity_search,
     direct_llm_questions,
-    OLLAMA_MODEL,
-    CHROMA_PATH,
-    DATA_PATH,
-    URL_PATH,
-    TIMEOUT
+)
+
+from var import (
+    DATA_PATH, 
+    CHROMA_PATH, 
+    OLLAMA_MODEL, 
+    URL_PATH
 )
 
 app = FastAPI()
