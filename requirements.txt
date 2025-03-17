@@ -12,3 +12,8 @@ langchain-huggingface
 python-dotenv
 chromadb
 huggingface-hub
+
+# sqlalchemy stuff
+sqlalchemy 
+psycopg2-binary 
+passlib

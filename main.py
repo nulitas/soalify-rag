@@ -2,17 +2,25 @@ import shutil
 import os
 import time
 
-from fastapi import FastAPI, UploadFile, File, Form, BackgroundTasks
+from fastapi import FastAPI, UploadFile, File, Form, BackgroundTasks, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List, Optional
+from passlib.context import CryptContext
 
 from langchain_ollama import OllamaLLM
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 from langchain.prompts import ChatPromptTemplate
+
+from sqlalchemy.orm import Session
+from database import engine, get_db
+import models
+
+
+models.Base.metadata.create_all(bind=engine)
 
 from utils import (
     query_rag, 
@@ -41,10 +49,64 @@ app.add_middleware(
 
 os.makedirs(DATA_PATH, exist_ok=True)
 
+
+# Password hashing
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
+
+# Pydantic models
+class UserCreate(BaseModel):
+    username: str
+    password: str
+    role_id: int = 1  
+
+class UserResponse(BaseModel):
+    user_id: int
+    username: str
+    role_id: int
+    
+    class Config:
+        orm_mode = True
+
 class QueryRequest(BaseModel):
     query_text: str
     num_questions: int = 1
     use_rag: bool = True
+
+
+# User endpoints
+@app.post("/users/", response_model=UserResponse)
+async def create_user(user: UserCreate, db: Session = Depends(get_db)):
+    db_user = db.query(models.User).filter(models.User.username == user.username).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="Username already registered")
+    
+    hashed_password = get_password_hash(user.password)
+    db_user = models.User(username=user.username, password=hashed_password, role_id=user.role_id)
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+@app.get("/users/", response_model=List[UserResponse])
+async def get_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    users = db.query(models.User).offset(skip).limit(limit).all()
+    return users
+
+@app.post("/roles/")
+async def create_role(role_name: str, db: Session = Depends(get_db)):
+    db_role = models.Role(role_name=role_name)
+    db.add(db_role)
+    db.commit()
+    db.refresh(db_role)
+    return {"role_id": db_role.role_id, "role_name": db_role.role_name}
+
+@app.get("/roles/")
+async def get_roles(db: Session = Depends(get_db)):
+    roles = db.query(models.Role).all()
+    return [{"role_id": role.role_id, "role_name": role.role_name} for role in roles]
 
 @app.post("/generate-questions")
 async def generate_questions(request: QueryRequest):
