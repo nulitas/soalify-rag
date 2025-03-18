@@ -19,7 +19,6 @@ from sqlalchemy.orm import Session
 from database import engine, get_db
 import models
 
-
 models.Base.metadata.create_all(bind=engine)
 
 from utils import (
@@ -70,13 +69,117 @@ class UserResponse(BaseModel):
     class Config:
         orm_mode = True
 
+
+class TagCreate(BaseModel):
+    tag_name: str
+
+class TagResponse(BaseModel):
+    tag_id: int
+    tag_name: str
+    
+    class Config:
+        orm_mode = True
+
+class PackageCreate(BaseModel):
+    package_name: str
+    questions: Optional[str] = None
+    tag_ids: List[int] = []
+
+class PackageResponse(BaseModel):
+    package_id: int
+    package_name: str
+    questions: Optional[str] = None
+    user_id: int
+    tags: List[TagResponse] = []
+    
+    class Config:
+        orm_mode = True
+
+
 class QueryRequest(BaseModel):
     query_text: str
     num_questions: int = 1
     use_rag: bool = True
 
 
-# User endpoints
+@app.post("/tags/", response_model=TagResponse)
+async def create_tag(tag: TagCreate, db: Session = Depends(get_db)):
+    db_tag = db.query(models.Tag).filter(models.Tag.tag_name == tag.tag_name).first()
+    if db_tag:
+        raise HTTPException(status_code=400, detail="Tag already exists")
+    db_tag = models.Tag(tag_name=tag.tag_name)
+    db.add(db_tag)
+    db.commit()
+    db.refresh(db_tag)
+    return db_tag
+
+@app.get("/tags/", response_model=List[TagResponse])
+async def get_tags(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    tags = db.query(models.Tag).offset(skip).limit(limit).all()
+    return tags
+
+@app.post("/packages/", response_model=PackageResponse)
+async def create_package(package: PackageCreate, db: Session = Depends(get_db), user_id: int = 1):
+    db_package = models.QuestionPackage(
+        package_name=package.package_name,
+        questions=package.questions,
+        user_id=user_id
+    )
+    
+    if package.tag_ids:
+        tags = db.query(models.Tag).filter(models.Tag.tag_id.in_(package.tag_ids)).all()
+        db_package.tags = tags
+    
+    db.add(db_package)
+    db.commit()
+    db.refresh(db_package)
+    return db_package
+
+@app.get("/packages/", response_model=List[PackageResponse])
+async def get_packages(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    packages = db.query(models.QuestionPackage).offset(skip).limit(limit).all()
+    return packages
+
+@app.get("/packages/{package_id}", response_model=PackageResponse)
+async def get_package(package_id: int, db: Session = Depends(get_db)):
+    db_package = db.query(models.QuestionPackage).filter(models.QuestionPackage.package_id == package_id).first()
+    if db_package is None:
+        raise HTTPException(status_code=404, detail="Package not found")
+    return db_package
+
+@app.put("/packages/{package_id}", response_model=PackageResponse)
+async def update_package(
+    package_id: int,
+    package: PackageCreate,
+    db: Session = Depends(get_db)
+):
+    db_package = db.query(models.QuestionPackage).filter(models.QuestionPackage.package_id == package_id).first()
+    if db_package is None:
+        raise HTTPException(status_code=404, detail="Package not found")
+    
+    db_package.package_name = package.package_name
+    if package.questions is not None:
+        db_package.questions = package.questions
+    
+    if package.tag_ids:
+        tags = db.query(models.Tag).filter(models.Tag.tag_id.in_(package.tag_ids)).all()
+        db_package.tags = tags
+    
+    db.commit()
+    db.refresh(db_package)
+    return db_package
+
+@app.delete("/packages/{package_id}")
+async def delete_package(package_id: int, db: Session = Depends(get_db)):
+    db_package = db.query(models.QuestionPackage).filter(models.QuestionPackage.package_id == package_id).first()
+    if db_package is None:
+        raise HTTPException(status_code=404, detail="Package not found")
+    
+    db.delete(db_package)
+    db.commit()
+    return {"detail": "Package deleted successfully"}
+
+
 @app.post("/users/", response_model=UserResponse)
 async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.username == user.username).first()
