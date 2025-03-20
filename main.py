@@ -69,7 +69,6 @@ class UserResponse(BaseModel):
     class Config:
         orm_mode = True
 
-
 class TagCreate(BaseModel):
     tag_name: str
 
@@ -95,13 +94,13 @@ class PackageResponse(BaseModel):
     class Config:
         orm_mode = True
 
-
 class QueryRequest(BaseModel):
     query_text: str
     num_questions: int = 1
     use_rag: bool = True
 
 
+# API routes
 @app.post("/tags/", response_model=TagResponse)
 async def create_tag(tag: TagCreate, db: Session = Depends(get_db)):
     db_tag = db.query(models.Tag).filter(models.Tag.tag_name == tag.tag_name).first()
@@ -211,6 +210,8 @@ async def get_roles(db: Session = Depends(get_db)):
     roles = db.query(models.Role).all()
     return [{"role_id": role.role_id, "role_name": role.role_name} for role in roles]
 
+
+# RAG and LLM API
 @app.post("/generate-questions")
 async def generate_questions(request: QueryRequest):
     try:
@@ -247,12 +248,93 @@ async def get_database_status():
         
         return {
             "document_count": len(items["ids"]),
+            "document_ids": items["ids"],
             "document_sources": list(sources)
         }
     except Exception as e:
         return JSONResponse(
             status_code=500,
             content={"error": f"Error getting database status: {str(e)}"}
+        )
+
+@app.get("/database/documents")
+async def list_documents():
+    try:
+        if not os.path.exists(CHROMA_PATH):
+            return {"documents": []}
+        
+        db = Chroma(
+            persist_directory=CHROMA_PATH, 
+            embedding_function=get_embedding_function()
+        )
+        
+        items = db.get(include=["metadatas"])
+        
+        documents = []
+        for i, doc_id in enumerate(items["ids"]):
+            doc_info = {
+                "id": doc_id,
+                "metadata": items["metadatas"][i] if items["metadatas"][i] else {}
+            }
+            documents.append(doc_info)
+        
+        return {"documents": documents}
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Error listing documents: {str(e)}"}
+        )
+
+@app.post("/database/delete")
+async def delete_documents(document_ids: list[str]):
+    try:
+        if not os.path.exists(CHROMA_PATH):
+            return JSONResponse(
+                status_code=404,
+                content={"error": "Database does not exist"}
+            )
+        
+        db = Chroma(
+            persist_directory=CHROMA_PATH, 
+            embedding_function=get_embedding_function()
+        )
+        
+        db.delete(ids=document_ids)
+        
+        return {
+            "message": f"Successfully deleted {len(document_ids)} documents",
+            "deleted_ids": document_ids
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Error deleting documents: {str(e)}"}
+        )
+
+@app.delete("/database/document/{document_id}")
+async def delete_document(document_id: str):
+    try:
+        if not os.path.exists(CHROMA_PATH):
+            return JSONResponse(
+                status_code=404,
+                content={"error": "Database does not exist"}
+            )
+        
+        db = Chroma(
+            persist_directory=CHROMA_PATH, 
+            embedding_function=get_embedding_function()
+        )
+        
+        db.delete(ids=[document_id])
+        
+        return {
+            "message": f"Successfully deleted document",
+            "deleted_id": document_id
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Error deleting document: {str(e)}"}
         )
 
 @app.post("/database/reset")
@@ -265,6 +347,48 @@ async def reset_database():
         return JSONResponse(
             status_code=500,
             content={"error": f"Error resetting database: {str(e)}"}
+        )
+
+@app.delete("/database/source/{source_filename}")
+async def delete_documents_by_source(source_filename: str):
+    try:
+        if not os.path.exists(CHROMA_PATH):
+            return JSONResponse(
+                status_code=404,
+                content={"error": "Database does not exist"}
+            )
+        
+        db = Chroma(
+            persist_directory=CHROMA_PATH, 
+            embedding_function=get_embedding_function()
+        )
+        
+        items = db.get(include=["metadatas"])
+        
+        source_path = f"data\\{source_filename}"  
+        ids_to_delete = []
+        
+        for i, metadata in enumerate(items["metadatas"]):
+            if metadata and "source" in metadata and metadata["source"] == source_path:
+                ids_to_delete.append(items["ids"][i])
+        
+        if not ids_to_delete:
+            return JSONResponse(
+                status_code=404,
+                content={"error": f"No documents found with source: {source_filename}"}
+            )
+        
+        db.delete(ids=ids_to_delete)
+        
+        return {
+            "message": f"Successfully deleted {len(ids_to_delete)} documents from source: {source_filename}",
+            "deleted_count": len(ids_to_delete),
+            "deleted_ids": ids_to_delete
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Error deleting documents: {str(e)}"}
         )
 
 @app.post("/database/upload-documents")
