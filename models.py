@@ -21,7 +21,7 @@ class User(Base):
     __tablename__ = 'users'
     
     user_id = Column(Integer, primary_key=True)
-    username = Column(String, unique=True)
+    email = Column(String, unique=True)
     password = Column(String) 
     role_id = Column(Integer, ForeignKey('roles.role_id'))
     

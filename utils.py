@@ -162,6 +162,64 @@ def parse_json_from_llm_response(response_text: str) -> Dict[str, Any]:
                 }
             }
 
+def calculate_chunk_ids(chunks):
+    last_page_id = None
+    current_chunk_index = 0
+
+    for chunk in chunks:
+        source = chunk.metadata.get("source")
+        page = chunk.metadata.get("page")
+        current_page_id = f"{source}:{page}"
+
+        if current_page_id == last_page_id:
+            current_chunk_index += 1
+        else:
+            current_chunk_index = 0
+            
+        chunk.metadata["id"] = f"{current_page_id}:{current_chunk_index}"
+        last_page_id = current_page_id
+
+    return chunks
+
+def process_documents(reset_db: bool = False):
+    try:
+        if reset_db and os.path.exists(CHROMA_PATH):
+            shutil.rmtree(CHROMA_PATH)
+        
+        document_loader = PyPDFDirectoryLoader(DATA_PATH)
+        documents = document_loader.load()
+
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=800,
+            chunk_overlap=80,
+            length_function=len,
+            is_separator_regex=False,
+        )
+        chunks = text_splitter.split_documents(documents)
+        
+        db = Chroma(
+            persist_directory=CHROMA_PATH,
+            embedding_function=get_embedding_function()
+        )
+        
+        chunks_with_ids = calculate_chunk_ids(chunks)
+        
+        existing_items = db.get(include=[])
+        existing_ids = set(existing_items["ids"])
+        
+        new_chunks = [chunk for chunk in chunks_with_ids 
+                     if chunk.metadata["id"] not in existing_ids]
+        
+        if new_chunks:
+            db.add_documents(new_chunks)
+            print(f"Added {len(new_chunks)} new chunks to database")
+        else:
+            print("No new chunks to add")
+            
+    except Exception as e:
+        print(f"Error processing documents: {e}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="RAG Query Assistant")
     parser.add_argument("query_text", type=str, help="Query text for RAG search")

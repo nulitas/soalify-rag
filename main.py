@@ -27,6 +27,8 @@ from utils import (
     get_prompt_template,
     get_similarity_search,
     direct_llm_questions,
+    calculate_chunk_ids,
+    process_documents
 )
 
 from var import (
@@ -57,13 +59,13 @@ def get_password_hash(password):
 
 # Pydantic models
 class UserCreate(BaseModel):
-    username: str
+    email: str
     password: str
     role_id: int = 1  
 
 class UserResponse(BaseModel):
     user_id: int
-    username: str
+    email: str
     role_id: int
     
     class Config:
@@ -181,12 +183,12 @@ async def delete_package(package_id: int, db: Session = Depends(get_db)):
 
 @app.post("/users/", response_model=UserResponse)
 async def create_user(user: UserCreate, db: Session = Depends(get_db)):
-    db_user = db.query(models.User).filter(models.User.username == user.username).first()
+    db_user = db.query(models.User).filter(models.User.email == user.email).first()
     if db_user:
-        raise HTTPException(status_code=400, detail="Username already registered")
+        raise HTTPException(status_code=400, detail="email already registered")
     
     hashed_password = get_password_hash(user.password)
-    db_user = models.User(username=user.username, password=hashed_password, role_id=user.role_id)
+    db_user = models.User(email=user.email, password=hashed_password, role_id=user.role_id)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -415,62 +417,6 @@ async def upload_documents(
             content={"error": f"Error uploading documents: {str(e)}"}
         )
 
-def calculate_chunk_ids(chunks):
-    last_page_id = None
-    current_chunk_index = 0
-
-    for chunk in chunks:
-        source = chunk.metadata.get("source")
-        page = chunk.metadata.get("page")
-        current_page_id = f"{source}:{page}"
-
-        if current_page_id == last_page_id:
-            current_chunk_index += 1
-        else:
-            current_chunk_index = 0
-            
-        chunk.metadata["id"] = f"{current_page_id}:{current_chunk_index}"
-        last_page_id = current_page_id
-
-    return chunks
-
-def process_documents(reset_db: bool = False):
-    try:
-        if reset_db and os.path.exists(CHROMA_PATH):
-            shutil.rmtree(CHROMA_PATH)
-        
-        document_loader = PyPDFDirectoryLoader(DATA_PATH)
-        documents = document_loader.load()
-
-        text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=800,
-            chunk_overlap=80,
-            length_function=len,
-            is_separator_regex=False,
-        )
-        chunks = text_splitter.split_documents(documents)
-        
-        db = Chroma(
-            persist_directory=CHROMA_PATH,
-            embedding_function=get_embedding_function()
-        )
-        
-        chunks_with_ids = calculate_chunk_ids(chunks)
-        
-        existing_items = db.get(include=[])
-        existing_ids = set(existing_items["ids"])
-        
-        new_chunks = [chunk for chunk in chunks_with_ids 
-                     if chunk.metadata["id"] not in existing_ids]
-        
-        if new_chunks:
-            db.add_documents(new_chunks)
-            print(f"Added {len(new_chunks)} new chunks to database")
-        else:
-            print("No new chunks to add")
-            
-    except Exception as e:
-        print(f"Error processing documents: {e}")
 
 @app.post("/populate-database")
 async def populate_database(background_tasks: BackgroundTasks):
