@@ -9,6 +9,9 @@ from pydantic import BaseModel
 from typing import List, Optional
 from passlib.context import CryptContext
 
+
+from schemas import UserCreate, UserResponse, TagCreate, TagResponse, PackageCreate, PackageResponse, QueryRequest
+
 from langchain_ollama import OllamaLLM
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -50,59 +53,13 @@ app.add_middleware(
 
 os.makedirs(DATA_PATH, exist_ok=True)
 
-
-# Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def get_password_hash(password):
     return pwd_context.hash(password)
 
-# Pydantic models
-class UserCreate(BaseModel):
-    email: str
-    password: str
-    role_id: int = 1  
 
-class UserResponse(BaseModel):
-    user_id: int
-    email: str
-    role_id: int
-    
-    class Config:
-        orm_mode = True
-
-class TagCreate(BaseModel):
-    tag_name: str
-
-class TagResponse(BaseModel):
-    tag_id: int
-    tag_name: str
-    
-    class Config:
-        orm_mode = True
-
-class PackageCreate(BaseModel):
-    package_name: str
-    questions: Optional[str] = None
-    tag_ids: List[int] = []
-
-class PackageResponse(BaseModel):
-    package_id: int
-    package_name: str
-    questions: Optional[str] = None
-    user_id: int
-    tags: List[TagResponse] = []
-    
-    class Config:
-        orm_mode = True
-
-class QueryRequest(BaseModel):
-    query_text: str
-    num_questions: int = 1
-    use_rag: bool = True
-
-
-# API routes
+# Users Endpoints
 @app.post("/tags/", response_model=TagResponse)
 async def create_tag(tag: TagCreate, db: Session = Depends(get_db)):
     db_tag = db.query(models.Tag).filter(models.Tag.tag_name == tag.tag_name).first()
@@ -180,7 +137,6 @@ async def delete_package(package_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"detail": "Package deleted successfully"}
 
-
 @app.post("/users/", response_model=UserResponse)
 async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
@@ -250,7 +206,6 @@ async def get_database_status():
         
         return {
             "document_count": len(items["ids"]),
-            "document_ids": items["ids"],
             "document_sources": list(sources)
         }
     except Exception as e:
@@ -285,70 +240,6 @@ async def list_documents():
         return JSONResponse(
             status_code=500,
             content={"error": f"Error listing documents: {str(e)}"}
-        )
-
-@app.post("/database/delete")
-async def delete_documents(document_ids: list[str]):
-    try:
-        if not os.path.exists(CHROMA_PATH):
-            return JSONResponse(
-                status_code=404,
-                content={"error": "Database does not exist"}
-            )
-        
-        db = Chroma(
-            persist_directory=CHROMA_PATH, 
-            embedding_function=get_embedding_function()
-        )
-        
-        db.delete(ids=document_ids)
-        
-        return {
-            "message": f"Successfully deleted {len(document_ids)} documents",
-            "deleted_ids": document_ids
-        }
-    except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"error": f"Error deleting documents: {str(e)}"}
-        )
-
-@app.delete("/database/document/{document_id}")
-async def delete_document(document_id: str):
-    try:
-        if not os.path.exists(CHROMA_PATH):
-            return JSONResponse(
-                status_code=404,
-                content={"error": "Database does not exist"}
-            )
-        
-        db = Chroma(
-            persist_directory=CHROMA_PATH, 
-            embedding_function=get_embedding_function()
-        )
-        
-        db.delete(ids=[document_id])
-        
-        return {
-            "message": f"Successfully deleted document",
-            "deleted_id": document_id
-        }
-    except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"error": f"Error deleting document: {str(e)}"}
-        )
-
-@app.post("/database/reset")
-async def reset_database():
-    try:
-        if os.path.exists(CHROMA_PATH):
-            shutil.rmtree(CHROMA_PATH)
-        return {"message": "Database reset successfully"}
-    except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"error": f"Error resetting database: {str(e)}"}
         )
 
 @app.delete("/database/source/{source_filename}")
@@ -416,7 +307,6 @@ async def upload_documents(
             status_code=500,
             content={"error": f"Error uploading documents: {str(e)}"}
         )
-
 
 @app.post("/populate-database")
 async def populate_database(background_tasks: BackgroundTasks):
