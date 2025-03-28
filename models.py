@@ -27,13 +27,16 @@ class User(Base):
     
     role = relationship("Role", back_populates="users")
     question_packages = relationship("QuestionPackage", back_populates="user")
+    tags = relationship("Tag", back_populates="user")
 
 class Tag(Base):
     __tablename__ = 'tags'
     
     tag_id = Column(Integer, primary_key=True)
     tag_name = Column(String, unique=True)
+    user_id = Column(Integer, ForeignKey('users.user_id'))
     
+    user = relationship("User", back_populates="tags")
     packages = relationship("QuestionPackage", secondary=package_tags, back_populates="tags")
 
 class QuestionPackage(Base):

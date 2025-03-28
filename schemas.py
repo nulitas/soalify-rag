@@ -20,6 +20,7 @@ class TagCreate(BaseModel):
 class TagResponse(BaseModel):
     tag_id: int
     tag_name: str
+    user_id: int
     
     class Config:
         orm_mode = True

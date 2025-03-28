@@ -61,11 +61,11 @@ def get_password_hash(password):
 
 # Users Endpoints
 @app.post("/tags/", response_model=TagResponse)
-async def create_tag(tag: TagCreate, db: Session = Depends(get_db)):
+async def create_tag(tag: TagCreate, db: Session = Depends(get_db), user_id: int = 1):
     db_tag = db.query(models.Tag).filter(models.Tag.tag_name == tag.tag_name).first()
     if db_tag:
         raise HTTPException(status_code=400, detail="Tag already exists")
-    db_tag = models.Tag(tag_name=tag.tag_name)
+    db_tag = models.Tag(tag_name=tag.tag_name, user_id=user_id)
     db.add(db_tag)
     db.commit()
     db.refresh(db_tag)
@@ -118,10 +118,13 @@ async def update_package(
     db_package.package_name = package.package_name
     if package.questions is not None:
         db_package.questions = package.questions
-    
-    if package.tag_ids:
-        tags = db.query(models.Tag).filter(models.Tag.tag_id.in_(package.tag_ids)).all()
-        db_package.tags = tags
+
+    if package.tag_ids is not None:
+        db_package.tags.clear()
+        
+        if package.tag_ids:
+            tags = db.query(models.Tag).filter(models.Tag.tag_id.in_(package.tag_ids)).all()
+            db_package.tags = tags
     
     db.commit()
     db.refresh(db_package)
