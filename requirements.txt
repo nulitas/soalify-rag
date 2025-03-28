@@ -16,4 +16,9 @@ huggingface-hub
 # sqlalchemy stuff
 sqlalchemy 
 psycopg2-binary 
-passlib
+passlib[bcrypt]==1.7.4
+
+# auth stuff
+python-jose[cryptography] 
+python-multipart
+bcrypt==4.0.1
