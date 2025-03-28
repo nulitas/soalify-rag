@@ -3,6 +3,7 @@ from fastapi import APIRouter, BackgroundTasks, UploadFile, File, Form, HTTPExce
 from fastapi.responses import JSONResponse
 from typing import List, Optional
 import shutil
+import time
 
 from langchain_chroma import Chroma
 
@@ -21,6 +22,37 @@ from schemas import QueryRequest
 router = APIRouter(prefix="/database", tags=["RAG"])
 
 questions_router = APIRouter(prefix="/questions", tags=["Question Generation"])
+
+@router.get("/documents")
+async def get_database_documents():
+    start_time = time.time()
+    try:
+        if not os.path.exists(CHROMA_PATH):
+            return {"document_sources": []}
+        
+        db = Chroma(
+            persist_directory=CHROMA_PATH, 
+            embedding_function=get_embedding_function()
+        )
+        
+        items = db.get(include=["metadatas"])
+        
+        sources = set()
+        for metadata in items["metadatas"]:
+            if metadata and "source" in metadata:
+                sources.add(os.path.basename(metadata["source"]))
+        
+        end_time = time.time()
+        print(f"Execution time: {end_time - start_time:.4f} seconds")
+        
+        return {
+            "document_sources": list(sources)
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Error getting database status: {str(e)}"}
+        )
 
 @router.post("/upload-documents")
 async def upload_documents(
@@ -44,61 +76,6 @@ async def upload_documents(
         return JSONResponse(
             status_code=500,
             content={"error": f"Error uploading documents: {str(e)}"}
-        )
-
-@router.get("/status")
-async def get_database_status():
-    try:
-        if not os.path.exists(CHROMA_PATH):
-            return {"document_count": 0, "document_sources": []}
-        
-        db = Chroma(
-            persist_directory=CHROMA_PATH, 
-            embedding_function=get_embedding_function()
-        )
-        items = db.get(include=["metadatas"])
-        
-        sources = set()
-        for metadata in items["metadatas"]:
-            if metadata and "source" in metadata:
-                sources.add(os.path.basename(metadata["source"]))
-        
-        return {
-            "document_count": len(items["ids"]),
-            "document_sources": list(sources)
-        }
-    except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"error": f"Error getting database status: {str(e)}"}
-        )
-
-@router.get("/documents")
-async def list_documents():
-    try:
-        if not os.path.exists(CHROMA_PATH):
-            return {"documents": []}
-        
-        db = Chroma(
-            persist_directory=CHROMA_PATH, 
-            embedding_function=get_embedding_function()
-        )
-        
-        items = db.get(include=["metadatas"])
-        
-        documents = []
-        for i, doc_id in enumerate(items["ids"]):
-            doc_info = {
-                "id": doc_id,
-                "metadata": items["metadatas"][i] if items["metadatas"][i] else {}
-            }
-            documents.append(doc_info)
-        
-        return {"documents": documents}
-    except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"error": f"Error listing documents: {str(e)}"}
         )
 
 @router.delete("/source/{source_filename}")
