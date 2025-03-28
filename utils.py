@@ -1,17 +1,27 @@
+
 import argparse
 import time
 import json
+import os
 
 from typing import List, Tuple, Dict, Any
 
 from langchain_chroma import Chroma
+
+# LLM
 from langchain_ollama import OllamaLLM
+# from langchain_groq import ChatGroq 
+
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.documents import Document
 
 from get_prompt_template import get_prompt_template
 from get_embedding_function import get_embedding_function
+
+# LLM imports
+# from var import (CHROMA_PATH, GROQ_API_KEY, GROQ_MODEL)
 from var import (OLLAMA_MODEL, CHROMA_PATH)
+
 
 def get_similarity_search(
     query_text: str, 
@@ -43,7 +53,15 @@ def query_rag(
             model=OLLAMA_MODEL, 
             timeout=60
         )
-    
+    # might use it later
+    # if model is None:
+    #     model = ChatGroq(
+    #         api_key=GROQ_API_KEY, 
+    #         model_name=GROQ_MODEL, 
+    #         temperature=0.0,  
+    #         timeout=60
+    #     )
+
     try:
         start_time = time.time()
         results = get_similarity_search(query_text, embedding_function)
@@ -67,6 +85,7 @@ def query_rag(
         
         prompt = prompt_template.format(context=context_text, num_questions=num_questions)
 
+        # response_text = model.invoke(prompt).content 
         response_text = model.invoke(prompt)
         
         print(f"Total processing time: {time.time() - start_time:.2f} seconds")
@@ -89,6 +108,14 @@ def direct_llm_questions(query_text: str, num_questions: int = 1) -> Dict[str, A
     try:
         start_time = time.time()
         
+        # might use it later
+        # model = ChatGroq(
+        #     api_key=GROQ_API_KEY,
+        #     model_name=GROQ_MODEL,
+        #     temperature=0.0,
+        #     timeout=60
+        # )
+
         model = OllamaLLM(
             model=OLLAMA_MODEL,
             timeout=60
@@ -104,7 +131,8 @@ def direct_llm_questions(query_text: str, num_questions: int = 1) -> Dict[str, A
         prompt_template = ChatPromptTemplate.from_template(prompt_template_str)
         prompt = prompt_template.format(query_text=query_text, num_questions=num_questions)
         
-        response_text = model.invoke(prompt)
+        # response_text = model.invoke(prompt).content  
+        response_text = model.invoke(prompt)  
         
         print(f"LLM generation took {time.time() - start_time:.2f} seconds")
         
