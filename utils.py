@@ -12,15 +12,19 @@ from langchain_chroma import Chroma
 from langchain_ollama import OllamaLLM
 # from langchain_groq import ChatGroq 
 
+# for document processing
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.documents import Document
 
 from get_prompt_template import get_prompt_template
 from get_embedding_function import get_embedding_function
 
+from langchain.document_loaders import PyPDFDirectoryLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+
 # LLM imports
-# from var import (CHROMA_PATH, GROQ_API_KEY, GROQ_MODEL)
-from var import (OLLAMA_MODEL, CHROMA_PATH)
+# from var import (CHROMA_PATH, GROQ_API_KEY, GROQ_MODEL, DATA_PATH)
+from var import (OLLAMA_MODEL, CHROMA_PATH, DATA_PATH)
 
 
 def get_similarity_search(
@@ -209,13 +213,16 @@ def calculate_chunk_ids(chunks):
 
     return chunks
 
-def process_documents(reset_db: bool = False):
+def process_documents(filename: str):
     try:
-        if reset_db and os.path.exists(CHROMA_PATH):
-            shutil.rmtree(CHROMA_PATH)
+        file_path = os.path.join(DATA_PATH, filename)
         
-        document_loader = PyPDFDirectoryLoader(DATA_PATH)
-        documents = document_loader.load()
+        if not os.path.exists(file_path):
+            print(f"File {filename} not found in {DATA_PATH}")
+            return
+        
+        document_loader = PyPDFDirectoryLoader(os.path.dirname(file_path))
+        documents = [doc for doc in document_loader.load() if doc.metadata['source'].endswith(filename)]
 
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=800,
@@ -240,12 +247,12 @@ def process_documents(reset_db: bool = False):
         
         if new_chunks:
             db.add_documents(new_chunks)
-            print(f"Added {len(new_chunks)} new chunks to database")
+            print(f"Added {len(new_chunks)} new chunks from {filename} to database")
         else:
-            print("No new chunks to add")
+            print(f"No new chunks to add from {filename}")
             
     except Exception as e:
-        print(f"Error processing documents: {e}")
+        print(f"Error processing document {filename}: {e}")
 
 
 def main():

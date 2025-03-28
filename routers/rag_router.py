@@ -54,28 +54,65 @@ async def get_database_documents():
             content={"error": f"Error getting database status: {str(e)}"}
         )
 
+@router.get("/document-count")
+async def get_document_count():
+    start_time = time.time()
+    try:
+        if not os.path.exists(CHROMA_PATH):
+            return {"document_count": 0}
+        
+        db = Chroma(
+            persist_directory=CHROMA_PATH, 
+            embedding_function=get_embedding_function()
+        )
+        
+        items = db.get()
+        
+        end_time = time.time()
+        print(f"Execution time: {end_time - start_time:.4f} seconds")
+
+        return {
+            "document_count": len(items["ids"])
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Error getting document count: {str(e)}"}
+        )
+
 @router.post("/upload-documents")
 async def upload_documents(
     background_tasks: BackgroundTasks,
-    files: List[UploadFile] = File(...),
-    reset_db: Optional[bool] = Form(False)
+    files: List[UploadFile] = File(...)
 ):
+    start_time = time.time()
+    uploaded_files = []
     try:
         for file in files:
             file_path = os.path.join(DATA_PATH, file.filename)
             with open(file_path, "wb") as buffer:
                 shutil.copyfileobj(file.file, buffer)
+            uploaded_files.append(file.filename)
+            
+            background_tasks.add_task(process_documents, file.filename)
         
-        background_tasks.add_task(process_documents, reset_db)
+        end_time = time.time()
+        execution_time = end_time - start_time
         
         return {
             "message": f"Uploaded {len(files)} files and started processing",
-            "filenames": [file.filename for file in files]
+            "filenames": uploaded_files,
+            "execution_time": execution_time
         }
     except Exception as e:
+        end_time = time.time()
+        execution_time = end_time - start_time
         return JSONResponse(
             status_code=500,
-            content={"error": f"Error uploading documents: {str(e)}"}
+            content={
+                "error": f"Error uploading documents: {str(e)}",
+                "execution_time": execution_time
+            }
         )
 
 @router.delete("/source/{source_filename}")
@@ -119,11 +156,6 @@ async def delete_documents_by_source(source_filename: str):
             status_code=500,
             content={"error": f"Error deleting documents: {str(e)}"}
         )
-
-@router.post("/populate")
-async def populate_database(background_tasks: BackgroundTasks):
-    background_tasks.add_task(process_documents, False)
-    return {"message": "Database population started in background"}
 
 @questions_router.post("/generate")
 async def generate_questions(request: QueryRequest):
