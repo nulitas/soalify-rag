@@ -19,7 +19,7 @@ from langchain_core.documents import Document
 from get_prompt_template import get_prompt_template
 from get_embedding_function import get_embedding_function
 
-from langchain.document_loaders import PyPDFDirectoryLoader
+from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 # LLM imports
@@ -243,7 +243,7 @@ def process_documents(filename: str):
         existing_ids = set(existing_items["ids"])
         
         new_chunks = [chunk for chunk in chunks_with_ids 
-                     if chunk.metadata["id"] not in existing_ids]
+                    if chunk.metadata["id"] not in existing_ids]
         
         if new_chunks:
             db.add_documents(new_chunks)

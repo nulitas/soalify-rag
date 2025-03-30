@@ -1,6 +1,19 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Dict, Optional
 
+class QACreate(BaseModel):
+    question: str
+    answer: str
+
+class QAResponse(BaseModel):
+    id: int
+    package_id: int
+    question: str
+    answer: str
+
+    class Config:
+        orm_mode = True
+        
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -34,16 +47,16 @@ class TagResponse(BaseModel):
 
 class PackageCreate(BaseModel):
     package_name: str
-    questions: Optional[str] = None
+    questions: Optional[List[QACreate]] = []
     tag_ids: List[int] = []
 
 class PackageResponse(BaseModel):
-    package_id: int
+    id: int
     package_name: str
-    questions: Optional[str] = None
+    questions: Optional[List["QAResponse"]] = []
     user_id: int
     tags: List[TagResponse] = []
-    
+
     class Config:
         orm_mode = True
 
