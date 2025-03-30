@@ -23,3 +23,13 @@ async def create_tag(tag: schemas.TagCreate, db: Session = Depends(get_db), user
 async def get_tags(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     tags = db.query(models.Tag).offset(skip).limit(limit).all()
     return tags
+
+@router.delete("/{tag_id}", response_model=schemas.TagResponse)
+async def delete_tag(tag_id: int, db: Session = Depends(get_db)):
+    tag = db.query(models.Tag).filter(models.Tag.tag_id == tag_id).first()
+    if not tag:
+        raise HTTPException(status_code=404, detail="Tag not found")
+    db.delete(tag)
+    db.commit()
+    return tag
+
