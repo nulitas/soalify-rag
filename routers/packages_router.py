@@ -33,10 +33,17 @@ async def create_package(package: schemas.PackageCreate, db: Session = Depends(g
     db.refresh(db_package)
 
     return db_package
-
 @router.get("/", response_model=List[schemas.PackageResponse])
-async def get_packages(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    packages = db.query(models.Package).offset(skip).limit(limit).all()
+async def get_packages(
+    user_id: int = None, 
+    skip: int = 0, 
+    limit: int = 100, 
+    db: Session = Depends(get_db)
+):
+    query = db.query(models.Package)
+    if user_id is not None:
+        query = query.filter(models.Package.user_id == user_id)
+    packages = query.offset(skip).limit(limit).all()
     return packages
 
 @router.get("/{package_id}", response_model=schemas.PackageResponse)

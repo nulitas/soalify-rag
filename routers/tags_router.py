@@ -20,8 +20,16 @@ async def create_tag(tag: schemas.TagCreate, db: Session = Depends(get_db), user
     return db_tag
 
 @router.get("/", response_model=List[schemas.TagResponse])
-async def get_tags(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    tags = db.query(models.Tag).offset(skip).limit(limit).all()
+async def get_tags(
+    user_id: int = None,
+    skip: int = 0, 
+    limit: int = 100, 
+    db: Session = Depends(get_db)
+):
+    query = db.query(models.Tag)
+    if user_id is not None:
+        query = query.filter(models.Tag.user_id == user_id)
+    tags = query.offset(skip).limit(limit).all()
     return tags
 
 @router.delete("/{tag_id}", response_model=schemas.TagResponse)
