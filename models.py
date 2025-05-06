@@ -22,7 +22,8 @@ class User(Base):
     
     user_id = Column(Integer, primary_key=True)
     email = Column(String, unique=True)
-    password = Column(String) 
+    password = Column(String)
+    fullname = Column(String)  
     role_id = Column(Integer, ForeignKey("roles.role_id"))
     
     role = relationship("Role", back_populates="users")

@@ -24,15 +24,23 @@ class TokenData(BaseModel):
 class UserCreate(BaseModel):
     email: str
     password: str
-    role_id: int = 1  
+    fullname: str  
+    role_id: int = 1
 
 class UserResponse(BaseModel):
     user_id: int
     email: str
+    fullname: str  
     role_id: int
     
     class Config:
         orm_mode = True
+
+class UserUpdate(BaseModel):
+    email: Optional[str] = None
+    password: Optional[str] = None
+    fullname: Optional[str] = None
+    role_id: Optional[int] = None
 
 class TagCreate(BaseModel):
     tag_name: str

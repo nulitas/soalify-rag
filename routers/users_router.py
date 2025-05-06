@@ -24,7 +24,12 @@ async def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Email already registered")
     
     hashed_password = get_password_hash(user.password)
-    db_user = models.User(email=user.email, password=hashed_password, role_id=user.role_id)
+    db_user = models.User(
+        email=user.email, 
+        password=hashed_password, 
+        fullname=user.fullname,  
+        role_id=user.role_id
+    )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -48,6 +53,68 @@ async def login_for_access_token(
         expires_delta=timedelta(minutes=30)
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
+@router.get("/{user_id}", response_model=schemas.UserResponse)
+async def get_user(
+    user_id: int, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_active_user)
+):
+    db_user = db.query(models.User).get(user_id)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return db_user
+
+@router.put("/{user_id}", response_model=schemas.UserResponse)
+async def update_user(
+    user_id: int, 
+    user_update: schemas.UserUpdate, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_active_user)
+):
+    if current_user.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to update this user")
+    
+    db_user = db.query(models.User).get(user_id)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if user_update.email is not None:
+        existing_user = db.query(models.User).filter(
+            models.User.email == user_update.email,
+            models.User.user_id != user_id
+        ).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email already registered")
+        db_user.email = user_update.email
+    
+    if user_update.fullname is not None:
+        db_user.fullname = user_update.fullname
+    if user_update.role_id is not None:
+        db_user.role_id = user_update.role_id
+    if user_update.password is not None:
+        db_user.password = get_password_hash(user_update.password)
+    
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+@router.delete("/{user_id}")
+async def delete_user(
+    user_id: int, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_active_user)
+):
+    if current_user.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this user")
+    
+    db_user = db.query(models.User).get(user_id)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    db.delete(db_user)
+    db.commit()
+    return {"message": "User deleted successfully"}
 
 @router.get("/me", response_model=schemas.UserResponse)
 async def read_users_me(current_user: models.User = Depends(get_current_active_user)):
