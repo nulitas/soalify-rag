@@ -54,6 +54,17 @@ async def login_for_access_token(
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
+@router.get("/me", response_model=schemas.UserResponse)
+async def read_users_me(
+    current_user: models.User = Depends(get_current_active_user)
+):
+    return {
+        "user_id": current_user.user_id,
+        "email": current_user.email,
+        "fullname": current_user.fullname,
+        "role_id": current_user.role_id
+    }
+
 @router.get("/{user_id}", response_model=schemas.UserResponse)
 async def get_user(
     user_id: int, 
@@ -116,9 +127,7 @@ async def delete_user(
     db.commit()
     return {"message": "User deleted successfully"}
 
-@router.get("/me", response_model=schemas.UserResponse)
-async def read_users_me(current_user: models.User = Depends(get_current_active_user)):
-    return current_user
+
 
 @router.get("/", response_model=List[schemas.UserResponse])
 async def get_users(
