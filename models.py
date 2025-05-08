@@ -34,8 +34,9 @@ class Tag(Base):
     __tablename__ = "tags"
     
     tag_id = Column(Integer, primary_key=True)
-    tag_name = Column(String, unique=True)
+    tag_name = Column(String)  
     user_id = Column(Integer, ForeignKey("users.user_id"))
+
     
     user = relationship("User", back_populates="tags")
     packages = relationship("Package", secondary=package_tags, back_populates="tags")

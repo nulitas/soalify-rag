@@ -34,7 +34,6 @@ async def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_user)
     return db_user
-
 @router.post("/login", response_model=schemas.Token)
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(), 
@@ -52,7 +51,17 @@ async def login_for_access_token(
         data={"sub": user.email}, 
         expires_delta=timedelta(minutes=30)
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {  
+            "user_id": user.user_id,
+            "email": user.email,
+            "fullname": user.fullname,
+            "role_id": user.role_id
+        }
+    }
 
 @router.get("/me", response_model=schemas.UserResponse)
 async def read_users_me(

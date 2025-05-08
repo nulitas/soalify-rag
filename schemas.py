@@ -14,12 +14,7 @@ class QAResponse(BaseModel):
     class Config:
         orm_mode = True
         
-class Token(BaseModel):
-    access_token: str
-    token_type: str
 
-class TokenData(BaseModel):
-    email: Optional[str] = None
 
 class UserCreate(BaseModel):
     email: str
@@ -41,6 +36,14 @@ class UserUpdate(BaseModel):
     password: Optional[str] = None
     fullname: Optional[str] = None
     role_id: Optional[int] = None
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    user: UserResponse
+
+class TokenData(BaseModel):
+    email: Optional[str] = None
 
 class TagCreate(BaseModel):
     tag_name: str
