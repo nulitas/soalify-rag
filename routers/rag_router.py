@@ -100,7 +100,7 @@ async def upload_documents(
         execution_time = end_time - start_time
         
         return {
-            "message": f"Uploaded {len(files)} files and started processing",
+            "message": f"Uploaded {len(files)} files and started processing. Files will be automatically deleted after processing.",
             "filenames": uploaded_files,
             "execution_time": execution_time
         }

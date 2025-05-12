@@ -250,9 +250,19 @@ def process_documents(filename: str):
             print(f"Added {len(new_chunks)} new chunks from {filename} to database")
         else:
             print(f"No new chunks to add from {filename}")
+        
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            print(f"Successfully deleted temporary file: {filename}")
             
     except Exception as e:
         print(f"Error processing document {filename}: {e}")
+        try:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                print(f"Deleted temporary file after error: {filename}")
+        except Exception as del_error:
+            print(f"Failed to delete temporary file: {filename}, error: {str(del_error)}")
 
 
 def main():
