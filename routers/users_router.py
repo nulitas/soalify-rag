@@ -148,13 +148,13 @@ async def get_users(
     users = db.query(models.User).offset(skip).limit(limit).all()
     return users
 
-@router.post("/roles/")
-async def create_role(role_name: str, db: Session = Depends(get_db)):
-    db_role = models.Role(role_name=role_name)
-    db.add(db_role)
-    db.commit()
-    db.refresh(db_role)
-    return {"role_id": db_role.role_id, "role_name": db_role.role_name}
+# @router.post("/roles/")
+# async def create_role(role_name: str, db: Session = Depends(get_db)):
+#     db_role = models.Role(role_name=role_name)
+#     db.add(db_role)
+#     db.commit()
+#     db.refresh(db_role)
+#     return {"role_id": db_role.role_id, "role_name": db_role.role_name}
 
 @router.get("/roles/")
 async def get_roles(db: Session = Depends(get_db)):

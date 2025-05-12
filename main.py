@@ -5,8 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from var import URL_PATH
 import models
 import routers
-
-from database import engine
+from database_seeder import seed_database
+from database import engine, get_db
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
@@ -26,6 +26,15 @@ app.include_router(routers.tags_router)
 app.include_router(routers.packages_router)
 app.include_router(routers.rag_router)
 app.include_router(routers.questions_router)
+
+
+@app.on_event("startup")
+async def startup_event():
+    db = next(get_db())
+    try:
+        seed_database(db)
+    finally:
+        db.close()
 
 if __name__ == "__main__":
     import uvicorn
