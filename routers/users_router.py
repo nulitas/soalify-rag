@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import List
-
+from passlib.context import CryptContext 
 from database import get_db
 import models
 import schemas
@@ -16,6 +16,8 @@ from auth import (
 )
 
 router = APIRouter(prefix="/users", tags=["Users"])
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 @router.post("/register", response_model=schemas.UserResponse)
 async def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
@@ -118,6 +120,33 @@ async def update_user(
     db.commit()
     db.refresh(db_user)
     return db_user
+
+
+@router.put("/{user_id}/password")
+async def update_password(
+    user_id: int,
+    password_update: schemas.PasswordUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_active_user)
+):
+    if user_id != current_user.user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only update your own password"
+        )
+    
+    if not pwd_context.verify(password_update.current_password, current_user.password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect"
+        )
+    
+    hashed_password = pwd_context.hash(password_update.new_password)
+    
+    current_user.password = hashed_password
+    db.commit()
+    
+    return {"message": "Password updated successfully"}
 
 @router.delete("/{user_id}")
 async def delete_user(

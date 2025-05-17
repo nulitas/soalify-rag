@@ -35,6 +35,11 @@ class UserUpdate(BaseModel):
     fullname: Optional[str] = None
     role_id: Optional[int] = None
 
+class PasswordUpdate(BaseModel):
+    current_password: str
+    new_password: str
+
+
 class Token(BaseModel):
     access_token: str
     token_type: str
