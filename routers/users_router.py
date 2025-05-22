@@ -19,8 +19,31 @@ router = APIRouter(prefix="/users", tags=["Users"])
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+def is_admin(user: models.User) -> bool:
+    """Check if the user has admin role (role_id=1)"""
+    return user.role_id == 1
+
+def admin_required(current_user: models.User = Depends(get_current_active_user)):
+    """Dependency to check if the current user is an admin"""
+    if not is_admin(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin privileges required for this operation"
+        )
+    return current_user
+
 @router.post("/register", response_model=schemas.UserResponse)
-async def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+async def create_user(
+    user: schemas.UserCreate, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_active_user)
+):
+    if not is_admin(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can register new users"
+        )
+    
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -36,6 +59,27 @@ async def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_user)
     return db_user
+
+@router.post("/public/register", response_model=schemas.UserResponse)
+async def public_register(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    db_user = db.query(models.User).filter(models.User.email == user.email).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    hashed_password = get_password_hash(user.password)
+    user_role_id = 2
+    
+    db_user = models.User(
+        email=user.email, 
+        password=hashed_password, 
+        fullname=user.fullname,  
+        role_id=user_role_id
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
 @router.post("/login", response_model=schemas.Token)
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(), 
@@ -54,15 +98,18 @@ async def login_for_access_token(
         expires_delta=timedelta(minutes=30)
     )
     
+    user_data = {  
+        "user_id": user.user_id,
+        "email": user.email,
+        "fullname": user.fullname,
+        "role_id": user.role_id,
+        "is_admin": is_admin(user)
+    }
+    
     return {
         "access_token": access_token,
         "token_type": "bearer",
-        "user": {  
-            "user_id": user.user_id,
-            "email": user.email,
-            "fullname": user.fullname,
-            "role_id": user.role_id
-        }
+        "user": user_data
     }
 
 @router.get("/me", response_model=schemas.UserResponse)
@@ -73,7 +120,8 @@ async def read_users_me(
         "user_id": current_user.user_id,
         "email": current_user.email,
         "fullname": current_user.fullname,
-        "role_id": current_user.role_id
+        "role_id": current_user.role_id,
+        "is_admin": is_admin(current_user)
     }
 
 @router.get("/{user_id}", response_model=schemas.UserResponse)
@@ -82,10 +130,24 @@ async def get_user(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_active_user)
 ):
+    if not is_admin(current_user) and current_user.user_id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to view this user's information"
+        )
+    
     db_user = db.query(models.User).get(user_id)
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
-    return db_user
+    
+    result = {
+        "user_id": db_user.user_id,
+        "email": db_user.email,
+        "fullname": db_user.fullname,
+        "role_id": db_user.role_id,
+        "is_admin": is_admin(db_user)
+    }
+    return result
 
 @router.put("/{user_id}", response_model=schemas.UserResponse)
 async def update_user(
@@ -94,12 +156,21 @@ async def update_user(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_active_user)
 ):
-    if current_user.user_id != user_id:
-        raise HTTPException(status_code=403, detail="Not authorized to update this user")
+    if current_user.user_id != user_id and not is_admin(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Not authorized to update this user"
+        )
     
     db_user = db.query(models.User).get(user_id)
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
+    
+    if user_update.role_id is not None and not is_admin(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can change user roles"
+        )
     
     if user_update.email is not None:
         existing_user = db.query(models.User).filter(
@@ -119,8 +190,15 @@ async def update_user(
     
     db.commit()
     db.refresh(db_user)
-    return db_user
-
+    
+    result = {
+        "user_id": db_user.user_id,
+        "email": db_user.email,
+        "fullname": db_user.fullname,
+        "role_id": db_user.role_id,
+        "is_admin": is_admin(db_user)
+    }
+    return result
 
 @router.put("/{user_id}/password")
 async def update_password(
@@ -129,21 +207,27 @@ async def update_password(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_active_user)
 ):
-    if user_id != current_user.user_id:
+
+    if user_id != current_user.user_id and not is_admin(current_user):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You can only update your own password"
         )
     
-    if not pwd_context.verify(password_update.current_password, current_user.password):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Current password is incorrect"
-        )
+    db_user = db.query(models.User).get(user_id)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
     
-    hashed_password = pwd_context.hash(password_update.new_password)
+    if user_id == current_user.user_id or not is_admin(current_user):
+
+        if not verify_password(password_update.current_password, db_user.password):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Current password is incorrect"
+            )
     
-    current_user.password = hashed_password
+    hashed_password = get_password_hash(password_update.new_password)
+    db_user.password = hashed_password
     db.commit()
     
     return {"message": "Password updated successfully"}
@@ -154,18 +238,28 @@ async def delete_user(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_active_user)
 ):
-    if current_user.user_id != user_id:
-        raise HTTPException(status_code=403, detail="Not authorized to delete this user")
+    
+    if not is_admin(current_user) and current_user.user_id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to delete this user"
+        )
     
     db_user = db.query(models.User).get(user_id)
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
     
+    if is_admin(db_user):
+        admin_count = db.query(models.User).filter(models.User.role_id == 1).count()
+        if admin_count <= 1:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot delete the last admin account"
+            )
+    
     db.delete(db_user)
     db.commit()
     return {"message": "User deleted successfully"}
-
-
 
 @router.get("/", response_model=List[schemas.UserResponse])
 async def get_users(
@@ -174,18 +268,31 @@ async def get_users(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_active_user)
 ):
+    if not is_admin(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin privileges required to view all users"
+        )
+    
     users = db.query(models.User).offset(skip).limit(limit).all()
-    return users
-
-# @router.post("/roles/")
-# async def create_role(role_name: str, db: Session = Depends(get_db)):
-#     db_role = models.Role(role_name=role_name)
-#     db.add(db_role)
-#     db.commit()
-#     db.refresh(db_role)
-#     return {"role_id": db_role.role_id, "role_name": db_role.role_name}
+    result = []
+    for user in users:
+        result.append({
+            "user_id": user.user_id,
+            "email": user.email,
+            "fullname": user.fullname,
+            "role_id": user.role_id,
+            "is_admin": is_admin(user)
+        })
+    return result
 
 @router.get("/roles/")
-async def get_roles(db: Session = Depends(get_db)):
+async def get_roles(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_active_user)
+):
     roles = db.query(models.Role).all()
-    return [{"role_id": role.role_id, "role_name": role.role_name} for role in roles]
+    return [{
+        "role_id": int(role.role_id),  
+        "role_name": role.role_name
+    } for role in roles]

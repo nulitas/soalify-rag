@@ -25,6 +25,7 @@ class UserResponse(BaseModel):
     email: str
     fullname: str  
     role_id: int
+    is_admin: Optional[bool] = None  
     
     class Config:
         orm_mode = True
