@@ -51,7 +51,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
         "nbf": datetime.utcnow(),  
     })
     
-    print(f"Creating token with payload: {to_encode}") 
+    # print(f"Creating token with payload: {to_encode}") 
     
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -67,7 +67,7 @@ def get_current_user(
     )
     
     try:
-        print(f"Received token: {token}") 
+        # print(f"Received token: {token}") 
 
         payload = jwt.decode(
             token, 
@@ -75,7 +75,7 @@ def get_current_user(
             algorithms=[ALGORITHM]
         )
         
-        print(f"Decoded payload: {payload}")
+        # print(f"Decoded payload: {payload}")
         
         email: str = payload.get("sub")
         if email is None:

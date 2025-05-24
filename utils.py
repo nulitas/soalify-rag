@@ -1,16 +1,11 @@
-
 import argparse
 import time
 import json
 import os
-
+import google.generativeai as genai
 from typing import List, Tuple, Dict, Any
 
 from langchain_chroma import Chroma
-
-# LLM
-from langchain_ollama import OllamaLLM
-# from langchain_groq import ChatGroq 
 
 # for document processing
 from langchain.prompts import ChatPromptTemplate
@@ -22,9 +17,32 @@ from get_embedding_function import get_embedding_function
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-# LLM imports
-# from var import (CHROMA_PATH, GROQ_API_KEY, GROQ_MODEL, DATA_PATH)
-from var import (OLLAMA_MODEL, CHROMA_PATH, DATA_PATH)
+from var import (CHROMA_PATH, DATA_PATH, GEMINI_API_KEY)
+
+
+class GeminiLLM:
+    def __init__(self, api_key: str, model_name: str = "gemini-2.5-flash-preview-04-17", timeout: int = 60):
+        self.api_key = api_key
+        self.model_name = model_name
+        self.timeout = timeout
+        
+        genai.configure(api_key=api_key)
+        self.model = genai.GenerativeModel(model_name)
+        
+    def invoke(self, prompt: str) -> str:
+        try:
+            generation_config = genai.types.GenerationConfig(
+                temperature=0.0,
+                max_output_tokens=2048
+            )
+
+            response = self.model.generate_content(
+                prompt,
+                generation_config=generation_config
+            )
+            return response.text
+        except Exception as e:
+            raise Exception(f"Gemini API error: {str(e)}")
 
 
 def get_similarity_search(
@@ -53,18 +71,11 @@ def query_rag(
         embedding_function = get_embedding_function()
     
     if model is None:
-        model = OllamaLLM(
-            model=OLLAMA_MODEL, 
+        model = GeminiLLM(
+            api_key=GEMINI_API_KEY,
+            model_name="gemini-2.5-flash-preview-04-17",
             timeout=60
         )
-    # might use it later
-    # if model is None:
-    #     model = ChatGroq(
-    #         api_key=GROQ_API_KEY, 
-    #         model_name=GROQ_MODEL, 
-    #         temperature=0.0,  
-    #         timeout=60
-    #     )
 
     try:
         start_time = time.time()
@@ -89,7 +100,6 @@ def query_rag(
         
         prompt = prompt_template.format(context=context_text, num_questions=num_questions)
 
-        # response_text = model.invoke(prompt).content 
         response_text = model.invoke(prompt)
         
         print(f"Total processing time: {time.time() - start_time:.2f} seconds")
@@ -112,16 +122,9 @@ def direct_llm_questions(query_text: str, num_questions: int = 1) -> Dict[str, A
     try:
         start_time = time.time()
         
-        # might use it later
-        # model = ChatGroq(
-        #     api_key=GROQ_API_KEY,
-        #     model_name=GROQ_MODEL,
-        #     temperature=0.0,
-        #     timeout=60
-        # )
-
-        model = OllamaLLM(
-            model=OLLAMA_MODEL,
+        model = GeminiLLM(
+            api_key=GEMINI_API_KEY,
+            model_name="gemini-2.5-flash-preview-04-17",
             timeout=60
         )
         
@@ -135,8 +138,7 @@ def direct_llm_questions(query_text: str, num_questions: int = 1) -> Dict[str, A
         prompt_template = ChatPromptTemplate.from_template(prompt_template_str)
         prompt = prompt_template.format(query_text=query_text, num_questions=num_questions)
         
-        # response_text = model.invoke(prompt).content  
-        response_text = model.invoke(prompt)  
+        response_text = model.invoke(prompt)
         
         print(f"LLM generation took {time.time() - start_time:.2f} seconds")
         
@@ -157,7 +159,6 @@ def direct_llm_questions(query_text: str, num_questions: int = 1) -> Dict[str, A
 def parse_json_from_llm_response(response_text: str) -> Dict[str, Any]:
     """Extract and parse JSON from LLM response text."""
     try:
-        
         return json.loads(response_text)
     except json.JSONDecodeError:
         try:

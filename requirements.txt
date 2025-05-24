@@ -4,8 +4,9 @@ pydantic
 pypdf
 
 # llm
-langchain-ollama
-langchain-groq
+# langchain-ollama
+# langchain-groq
+google-generativeai==0.3.2
 
 langchain-community
 langchain-text-splitters
