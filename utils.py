@@ -17,11 +17,11 @@ from get_embedding_function import get_embedding_function
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-from var import (CHROMA_PATH, DATA_PATH, GEMINI_API_KEY)
+from var import ( DATA_PATH, CHROMA_PATH, GEMINI_MODEL, GEMINI_API_KEY)
 
 
 class GeminiLLM:
-    def __init__(self, api_key: str, model_name: str = "gemini-2.5-flash-preview-04-17", timeout: int = 60):
+    def __init__(self, api_key: str, model_name: str = GEMINI_MODEL, timeout: int = 60):
         self.api_key = api_key
         self.model_name = model_name
         self.timeout = timeout
@@ -73,7 +73,7 @@ def query_rag(
     if model is None:
         model = GeminiLLM(
             api_key=GEMINI_API_KEY,
-            model_name="gemini-2.5-flash-preview-04-17",
+            model_name=GEMINI_MODEL,
             timeout=60
         )
 
@@ -124,7 +124,7 @@ def direct_llm_questions(query_text: str, num_questions: int = 1) -> Dict[str, A
         
         model = GeminiLLM(
             api_key=GEMINI_API_KEY,
-            model_name="gemini-2.5-flash-preview-04-17",
+            model_name=GEMINI_MODEL,
             timeout=60
         )
         
