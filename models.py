@@ -5,8 +5,8 @@ from database import Base
 package_tags = Table(
     "package_tags",
     Base.metadata,
-    Column("package_id", Integer, ForeignKey("packages.id")),
-    Column("tag_id", Integer, ForeignKey("tags.tag_id"))
+    Column("package_id", Integer, ForeignKey("packages.id", ondelete="CASCADE")),
+    Column("tag_id", Integer, ForeignKey("tags.tag_id", ondelete="CASCADE"))
 )
 
 class Role(Base):
@@ -27,17 +27,16 @@ class User(Base):
     role_id = Column(Integer, ForeignKey("roles.role_id"))
     
     role = relationship("Role", back_populates="users")
-    packages = relationship("Package", back_populates="user")
-    tags = relationship("Tag", back_populates="user")
+    packages = relationship("Package", back_populates="user", cascade="all, delete-orphan")
+    tags = relationship("Tag", back_populates="user", cascade="all, delete-orphan")
 
 class Tag(Base):
     __tablename__ = "tags"
     
     tag_id = Column(Integer, primary_key=True)
     tag_name = Column(String)  
-    user_id = Column(Integer, ForeignKey("users.user_id"))
+    user_id = Column(Integer, ForeignKey("users.user_id", ondelete="CASCADE"))
 
-    
     user = relationship("User", back_populates="tags")
     packages = relationship("Package", secondary=package_tags, back_populates="tags")
 
@@ -46,7 +45,7 @@ class Package(Base):
     
     id = Column(Integer, primary_key=True)
     package_name = Column(String)
-    user_id = Column(Integer, ForeignKey("users.user_id"))
+    user_id = Column(Integer, ForeignKey("users.user_id", ondelete="CASCADE"))
     
     user = relationship("User", back_populates="packages")
     tags = relationship("Tag", secondary=package_tags, back_populates="packages")
@@ -56,7 +55,7 @@ class QA(Base):
     __tablename__ = "qa"
     
     id = Column(Integer, primary_key=True)
-    package_id = Column(Integer, ForeignKey("packages.id"))  
+    package_id = Column(Integer, ForeignKey("packages.id", ondelete="CASCADE"))  
     question = Column(Text)
     answer = Column(Text)
 

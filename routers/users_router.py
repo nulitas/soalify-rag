@@ -257,9 +257,18 @@ async def delete_user(
                 detail="Cannot delete the last admin account"
             )
     
-    db.delete(db_user)
-    db.commit()
-    return {"message": "User deleted successfully"}
+    try:
+        db.delete(db_user)
+        db.commit()
+        
+        return {"message": "User and all related data deleted successfully"}
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error deleting user: {str(e)}"
+        )
 
 @router.get("/", response_model=List[schemas.UserResponse])
 async def get_users(

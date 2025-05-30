@@ -1,7 +1,8 @@
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from fastapi.concurrency import run_in_threadpool
+ 
 from var import URL_PATH
 import models
 import routers
@@ -32,7 +33,7 @@ app.include_router(routers.questions_router)
 async def startup_event():
     db = next(get_db())
     try:
-        seed_database(db)
+        await run_in_threadpool(seed_database, db)
     finally:
         db.close()
 
