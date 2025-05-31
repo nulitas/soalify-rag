@@ -23,9 +23,10 @@ class UserCreate(BaseModel):
 class UserResponse(BaseModel):
     user_id: int
     email: str
-    fullname: str  
+    fullname: str
     role_id: int
     is_admin: Optional[bool] = None  
+    is_seeded: Optional[bool] = False
     
     class Config:
         orm_mode = True

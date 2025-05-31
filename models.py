@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Text, Table
+from sqlalchemy import Column, Integer, String, ForeignKey, Text, Table, Boolean
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -25,6 +25,7 @@ class User(Base):
     password = Column(String)
     fullname = Column(String)  
     role_id = Column(Integer, ForeignKey("roles.role_id"))
+    is_seeded = Column(Boolean, default=False) 
     
     role = relationship("Role", back_populates="users")
     packages = relationship("Package", back_populates="user", cascade="all, delete-orphan")

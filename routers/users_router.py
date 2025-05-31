@@ -23,6 +23,10 @@ def is_admin(user: models.User) -> bool:
     """Check if the user has admin role (role_id=1)"""
     return user.role_id == 1
 
+def is_seeded_admin(user: models.User) -> bool:
+    """Check if the user is a seeded admin user"""
+    return user.is_seeded and is_admin(user)
+
 def admin_required(current_user: models.User = Depends(get_current_active_user)):
     """Dependency to check if the current user is an admin"""
     if not is_admin(current_user):
@@ -53,7 +57,8 @@ async def create_user(
         email=user.email, 
         password=hashed_password, 
         fullname=user.fullname,  
-        role_id=user.role_id
+        role_id=user.role_id,
+        is_seeded=False  # New users are never seeded
     )
     db.add(db_user)
     db.commit()
@@ -73,7 +78,8 @@ async def public_register(user: schemas.UserCreate, db: Session = Depends(get_db
         email=user.email, 
         password=hashed_password, 
         fullname=user.fullname,  
-        role_id=user_role_id
+        role_id=user_role_id,
+        is_seeded=False 
     )
     db.add(db_user)
     db.commit()
@@ -103,7 +109,8 @@ async def login_for_access_token(
         "email": user.email,
         "fullname": user.fullname,
         "role_id": user.role_id,
-        "is_admin": is_admin(user)
+        "is_admin": is_admin(user),
+        "is_seeded": getattr(user, 'is_seeded', False)
     }
     
     return {
@@ -121,9 +128,10 @@ async def read_users_me(
         "email": current_user.email,
         "fullname": current_user.fullname,
         "role_id": current_user.role_id,
-        "is_admin": is_admin(current_user)
+        "is_admin": is_admin(current_user),
+        "is_seeded": getattr(current_user, 'is_seeded', False) 
     }
-
+    
 @router.get("/{user_id}", response_model=schemas.UserResponse)
 async def get_user(
     user_id: int, 
@@ -145,7 +153,8 @@ async def get_user(
         "email": db_user.email,
         "fullname": db_user.fullname,
         "role_id": db_user.role_id,
-        "is_admin": is_admin(db_user)
+        "is_admin": is_admin(db_user),
+        "is_seeded": getattr(db_user, 'is_seeded', False)
     }
     return result
 
@@ -166,13 +175,26 @@ async def update_user(
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    if user_update.role_id is not None and not is_admin(current_user):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only administrators can change user roles"
-        )
+    if user_update.role_id is not None:
+        if not is_admin(current_user):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only administrators can change user roles"
+            )
+        
+        if is_seeded_admin(db_user):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot change role of seeded system administrator"
+            )
     
     if user_update.email is not None:
+        if db_user.is_seeded:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot change email of seeded system user"
+            )
+        
         existing_user = db.query(models.User).filter(
             models.User.email == user_update.email,
             models.User.user_id != user_id
@@ -196,7 +218,8 @@ async def update_user(
         "email": db_user.email,
         "fullname": db_user.fullname,
         "role_id": db_user.role_id,
-        "is_admin": is_admin(db_user)
+        "is_admin": is_admin(db_user),
+        "is_seeded": getattr(db_user, 'is_seeded', False)
     }
     return result
 
@@ -219,7 +242,6 @@ async def update_password(
         raise HTTPException(status_code=404, detail="User not found")
     
     if user_id == current_user.user_id or not is_admin(current_user):
-
         if not verify_password(password_update.current_password, db_user.password):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -249,12 +271,30 @@ async def delete_user(
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
     
+    if db_user.is_seeded:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete seeded system users"
+        )
+    
     if is_admin(db_user):
-        admin_count = db.query(models.User).filter(models.User.role_id == 1).count()
-        if admin_count <= 1:
+        non_seeded_admin_count = db.query(models.User).filter(
+            models.User.role_id == 1,
+            models.User.is_seeded == False
+        ).count()
+        
+        total_admin_count = db.query(models.User).filter(models.User.role_id == 1).count()
+        
+        if total_admin_count <= 1:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Cannot delete the last admin account"
+            )
+        
+        if non_seeded_admin_count <= 1:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot delete the last deletable admin account. At least one non-seeded admin must remain."
             )
     
     try:
@@ -291,7 +331,8 @@ async def get_users(
             "email": user.email,
             "fullname": user.fullname,
             "role_id": user.role_id,
-            "is_admin": is_admin(user)
+            "is_admin": is_admin(user),
+            "is_seeded": getattr(user, 'is_seeded', False)
         })
     return result
 
