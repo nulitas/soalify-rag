@@ -16,7 +16,8 @@ from utils import (
     query_rag,
     get_embedding_function,
     process_documents,
-    direct_llm_questions
+    direct_llm_questions,
+    get_available_documents
 )
 from schemas import QueryRequest
 
@@ -35,26 +36,13 @@ async def get_database_documents(
 ):
     start_time = time.time()
     try:
-        if not os.path.exists(CHROMA_PATH):
-            return {"document_sources": []}
-
-        db = Chroma(
-            persist_directory=CHROMA_PATH,
-            embedding_function=get_embedding_function()
-        )
-
-        items = db.get(include=["metadatas"]) 
-
-        sources = set()
-        for metadata in items["metadatas"]:
-            if metadata and "source" in metadata:
-                sources.add(os.path.basename(metadata["source"]))
-
+        documents = get_available_documents()
+        
         end_time = time.time()
         print(f"Execution time: {end_time - start_time:.4f} seconds")
 
         return {
-            "document_sources": list(sources)
+            "document_sources": documents
         }
     except Exception as e:
         print(f"Error getting database documents: {str(e)}")
@@ -185,7 +173,11 @@ async def delete_documents_by_source(
 async def generate_questions(request: QueryRequest):
     try:
         if request.use_rag:
-            result = query_rag(request.query_text, request.num_questions)
+            result = query_rag(
+                request.query_text, 
+                request.num_questions,
+                selected_documents=getattr(request, 'selected_documents', None)
+            )
             return {"result": result, "method": "rag"}
         else:
             result = direct_llm_questions(request.query_text, request.num_questions)
@@ -196,4 +188,56 @@ async def generate_questions(request: QueryRequest):
         return JSONResponse(
             status_code=500,
             content={"error": error_msg}
+        )
+
+@router.get("/document-info")
+async def get_document_info(
+    current_user: models.User = Depends(get_current_active_user)
+):
+    """Get detailed information about documents in the database"""
+    try:
+        if not os.path.exists(CHROMA_PATH):
+            return {"documents": [], "total_chunks": 0}
+
+        db = Chroma(
+            persist_directory=CHROMA_PATH,
+            embedding_function=get_embedding_function()
+        )
+
+        items = db.get(include=["metadatas"])
+        
+        doc_info = {}
+        for metadata in items["metadatas"]:
+            if metadata and "source" in metadata:
+                source = os.path.basename(metadata["source"])
+                if source not in doc_info:
+                    doc_info[source] = {
+                        "filename": source,
+                        "chunk_count": 0,
+                        "pages": set() if "page" in metadata else None
+                    }
+                doc_info[source]["chunk_count"] += 1
+                if "page" in metadata:
+                    doc_info[source]["pages"].add(metadata["page"])
+
+        documents = []
+        for filename, info in doc_info.items():
+            doc = {
+                "filename": filename,
+                "chunk_count": info["chunk_count"],
+            }
+            if info["pages"]:
+                doc["page_count"] = len(info["pages"])
+                doc["page_range"] = f"{min(info['pages'])}-{max(info['pages'])}"
+            documents.append(doc)
+        
+        return {
+            "documents": documents,
+            "total_chunks": len(items["ids"])
+        }
+    except Exception as e:
+        print(f"Error getting document info: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting document info: {str(e)}"
         )

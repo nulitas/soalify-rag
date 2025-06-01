@@ -82,4 +82,15 @@ class PackageResponse(BaseModel):
 class QueryRequest(BaseModel):
     query_text: str
     num_questions: int = 1
-    use_rag: bool = True
+    use_rag: bool = False
+    selected_documents: Optional[List[str]] = None  
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "query_text": "Machine learning concepts",
+                "num_questions": 3,
+                "use_rag": True,
+                "selected_documents": ["document1.pdf", "document2.pdf"]
+            }
+        }

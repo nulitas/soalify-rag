@@ -3,7 +3,7 @@ import time
 import json
 import os
 import google.generativeai as genai
-from typing import List, Tuple, Dict, Any
+from typing import List, Tuple, Dict, Any, Optional
 import re
 
 from langchain_chroma import Chroma
@@ -64,8 +64,18 @@ class GeminiLLM:
 def get_similarity_search(
     query_text: str, 
     embedding_function, 
-    top_k: int = 3
+    top_k: int = 3,
+    selected_documents: Optional[List[str]] = None
 ) -> List[Tuple[Document, float]]:
+    """
+    Enhanced similarity search with document filtering capability
+    
+    Args:
+        query_text: The search query
+        embedding_function: Embedding function for vector search
+        top_k: Number of results to return
+        selected_documents: List of document filenames to search within (optional)
+    """
     try:
         start_time = time.time()
         
@@ -76,26 +86,43 @@ def get_similarity_search(
             print("No documents found in ChromaDB collection")
             return []
         
-        actual_k = min(top_k, collection_count)
-        
-        try:
-            results = db.similarity_search_with_score(query_text, k=actual_k)
-        except Exception as search_error:
-            print(f"Primary search failed: {search_error}")
+        if selected_documents:
+            all_results = db.similarity_search_with_score(query_text, k=collection_count)
+            
+            filtered_results = []
+            for doc, score in all_results:
+                doc_filename = os.path.basename(doc.metadata.get('source', ''))
+                if doc_filename in selected_documents:
+                    filtered_results.append((doc, score))
+            
+            results = filtered_results[:top_k]
+            
+            if not results:
+                print(f"No results found in selected documents: {selected_documents}")
+                return []
+                
+            print(f"Found {len(results)} results from selected documents: {selected_documents}")
+        else:
+            actual_k = min(top_k, collection_count)
             
             try:
-                print("Trying fallback search with k=1")
-                results = db.similarity_search_with_score(query_text, k=1)
-            except Exception as fallback_error:
-                print(f"Fallback search also failed: {fallback_error}")
+                results = db.similarity_search_with_score(query_text, k=actual_k)
+            except Exception as search_error:
+                print(f"Primary search failed: {search_error}")
                 
                 try:
-                    print("Using basic similarity search without scores")
-                    docs = db.similarity_search(query_text, k=1)
-                    results = [(doc, 0.0) for doc in docs]  
-                except Exception as final_error:
-                    print(f"All search methods failed: {final_error}")
-                    return []
+                    print("Trying fallback search with k=1")
+                    results = db.similarity_search_with_score(query_text, k=1)
+                except Exception as fallback_error:
+                    print(f"Fallback search also failed: {fallback_error}")
+                    
+                    try:
+                        print("Using basic similarity search without scores")
+                        docs = db.similarity_search(query_text, k=1)
+                        results = [(doc, 0.0) for doc in docs]  
+                    except Exception as final_error:
+                        print(f"All search methods failed: {final_error}")
+                        return []
         
         print(f"Similarity search took {time.time() - start_time:.2f} seconds")
         print(f"Found {len(results)} results from {collection_count} total documents")
@@ -103,6 +130,32 @@ def get_similarity_search(
         
     except Exception as e:
         print(f"Error in similarity search setup: {e}")
+        return []
+
+
+def get_available_documents() -> List[str]:
+    """
+    Get list of available document sources in the database
+    """
+    try:
+        if not os.path.exists(CHROMA_PATH):
+            return []
+
+        db = Chroma(
+            persist_directory=CHROMA_PATH,
+            embedding_function=get_embedding_function()
+        )
+
+        items = db.get(include=["metadatas"])
+        
+        sources = set()
+        for metadata in items["metadatas"]:
+            if metadata and "source" in metadata:
+                sources.add(os.path.basename(metadata["source"]))
+
+        return sorted(list(sources))
+    except Exception as e:
+        print(f"Error getting available documents: {e}")
         return []
 
 
@@ -208,8 +261,19 @@ def query_rag(
     query_text: str, 
     num_questions: int = 1,
     embedding_function=None, 
-    model=None
+    model=None,
+    selected_documents: Optional[List[str]] = None
 ) -> Dict[str, Any]:
+    """
+    Enhanced RAG query with document selection capability
+    
+    Args:
+        query_text: The search query
+        num_questions: Number of questions to generate
+        embedding_function: Embedding function for vector search
+        model: LLM model instance
+        selected_documents: List of document filenames to search within (optional)
+    """
     if embedding_function is None:
         embedding_function = get_embedding_function()
     
@@ -222,15 +286,24 @@ def query_rag(
 
     try:
         start_time = time.time()
-        results = get_similarity_search(query_text, embedding_function)
+        results = get_similarity_search(
+            query_text, 
+            embedding_function, 
+            selected_documents=selected_documents
+        )
         
         if not results:
+            message = "Unable to find relevant documents."
+            if selected_documents:
+                message += f" No relevant content found in selected documents: {', '.join(selected_documents)}"
+            
             return {
                 "questions": [],
                 "metadata": {
                     "count": 0,
                     "status": "error",
-                    "message": "Unable to find relevant documents."
+                    "message": message,
+                    "selected_documents": selected_documents
                 }
             }
             
@@ -251,6 +324,15 @@ def query_rag(
         print(f"LLM generation took {time.time() - start_time:.2f} seconds")
         
         json_output = parse_json_from_llm_response(response_text)
+        
+        if "metadata" not in json_output:
+            json_output["metadata"] = {}
+        json_output["metadata"]["selected_documents"] = selected_documents
+        json_output["metadata"]["sources_used"] = list(set([
+            os.path.basename(doc.metadata.get('source', '')) 
+            for doc, _ in results
+        ]))
+        
         return json_output
     
     except Exception as e:
@@ -260,7 +342,8 @@ def query_rag(
             "metadata": {
                 "count": 0,
                 "status": "error",
-                "message": f"An error occurred in processing the query: {str(e)}"
+                "message": f"An error occurred in processing the query: {str(e)}",
+                "selected_documents": selected_documents
             }
         }
     
