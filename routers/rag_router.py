@@ -1,6 +1,6 @@
 import os
 from fastapi import APIRouter, BackgroundTasks, UploadFile, File, Form, HTTPException, Depends, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse 
 from typing import List, Optional
 import shutil
 import time
@@ -126,7 +126,6 @@ async def delete_documents_by_source(
     source_filename: str,
     current_user: models.User = Depends(get_current_active_user)
 ):
-
     if current_user.role_id != 1:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -156,9 +155,22 @@ async def delete_documents_by_source(
             )
 
         db.delete(ids=ids_to_delete)
+        
+        file_path = os.path.join(DATA_PATH, source_filename)
+        file_deleted = False
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+                file_deleted = True
+                print(f"Successfully deleted physical file: {source_filename}")
+            except Exception as file_error:
+                print(f"Warning: Could not delete physical file {source_filename}: {file_error}")
+        
         return {
             "message": f"Admin {current_user.email} successfully deleted {len(ids_to_delete)} documents from source: {source_filename}",
             "deleted_count": len(ids_to_delete),
+            "file_deleted": file_deleted,
+            "file_path_existed": os.path.exists(os.path.join(DATA_PATH, source_filename)) if not file_deleted else True
         }
     except HTTPException:
         raise
@@ -167,6 +179,43 @@ async def delete_documents_by_source(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error deleting documents: {str(e)}"
+        )
+
+@router.get("/preview/{filename}")
+async def get_file_preview(filename: str):
+    """
+    Serve PDF file for preview in browser (No authentication required)
+    """
+    try:
+        file_path = os.path.join(DATA_PATH, filename)
+        
+        if not os.path.exists(file_path):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, 
+                detail=f"File '{filename}' not found"
+            )
+        
+        if not filename.lower().endswith('.pdf'):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Only PDF files can be previewed"
+            )
+
+        return FileResponse(
+            file_path, 
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"inline; filename={filename}",
+                "Cache-Control": "no-cache"
+            }
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error serving file preview for {filename}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error serving file preview: {str(e)}"
         )
 
 @questions_router.post("/generate")

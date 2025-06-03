@@ -473,12 +473,7 @@ def process_documents(filename: str):
         else:
             print(f"No new chunks to add from {filename}")
         
-        try:
-            if os.path.exists(file_path):
-                os.remove(file_path)
-                print(f"Successfully deleted temporary file: {filename}")
-        except Exception as delete_error:
-            print(f"Warning: Could not delete temporary file {filename}: {delete_error}")
+        print(f"File {filename} processed successfully and kept for preview")
             
     except Exception as e:
         print(f"Error processing document {filename}: {e}")
@@ -486,9 +481,9 @@ def process_documents(filename: str):
             file_path = os.path.join(DATA_PATH, filename)
             if os.path.exists(file_path):
                 os.remove(file_path)
-                print(f"Deleted temporary file after error: {filename}")
+                print(f"Deleted file after processing error: {filename}")
         except Exception as del_error:
-            print(f"Failed to delete temporary file: {filename}, error: {str(del_error)}")
+            print(f"Failed to delete file after error: {filename}, error: {str(del_error)}")
 
 
 def reset_chroma_db():
