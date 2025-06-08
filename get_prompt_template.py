@@ -8,21 +8,26 @@ Kriteria Pembuatan Soal:
 - SANGAT PENTING: Hasilkan HANYA 1 pertanyaan dan 1 jawaban.
 - Pertanyaan harus mendalam dan menguji pemahaman konseptual.
 - WAJIB: Setiap pertanyaan HARUS diakhiri dengan tanda tanya (?) untuk menunjukkan bahwa ini adalah pertanyaan.
-- Jawaban harus singkat (maksimal 3 kalimat), akurat, dan informasinya diambil SECARA EKSPLISIT dari dokumen.
-- PENTING: JANGAN PERNAH mengawali pertanyaan atau jawaban dengan frasa seperti "Berdasarkan dokumen...", "Menurut teks...", atau "Dari konteks...". Langsung tuliskan inti pertanyaan dan jawabannya.
+- Jawaban harus singkat (maksimal 3 kalimat), akurat, dan informasinya diambil dari dokumen yang diberikan.
+- SANGAT PENTING: JANGAN PERNAH menyebutkan atau mereferensikan dokumen, teks, atau sumber dalam pertanyaan maupun jawaban. Contoh yang DILARANG: "berdasarkan teks", "menurut dokumen", "dalam teks", "disebutkan dalam teks", "informasi yang diberikan", "dari bacaan", "sesuai teks", dll.
+- Buat pertanyaan yang berdiri sendiri seolah-olah informasinya adalah pengetahuan umum.
 - Gunakan Bahasa Indonesia yang baku dan jelas.
 - Pastikan pertanyaan menggunakan kata tanya seperti: Apa, Mengapa, Bagaimana, Kapan, Di mana, Siapa, atau Jelaskan.
 
 Format Pertanyaan yang Benar:
-✓ "Apa yang dimaksud dengan...?"
-✓ "Mengapa penyair melakukan...?"
-✓ "Bagaimana cara kerja...?"
-✓ "Jelaskan pengertian...?"
+✓ "Apa yang dimaksud dengan fotosintesis?"
+✓ "Mengapa penyair memilih diksi tertentu?"
+✓ "Bagaimana cara kerja mesin uap?"
+✓ "Jelaskan pengertian demokrasi?"
+✓ "Siapa pendiri Kesultanan Aceh?"
 
 Format yang SALAH (hindari):
+✗ "Apa yang dimaksud dengan fotosintesis berdasarkan teks?"
+✗ "Mengapa penyair memilih diksi tertentu menurut dokumen?"
+✗ "Bagaimana cara kerja mesin uap yang disebutkan dalam teks?"
+✗ "Jelaskan pengertian demokrasi sesuai bacaan?"
+✗ "Siapa pendiri Kesultanan Aceh dalam teks?"
 ✗ "Pengertian dari..." (tanpa tanda tanya)
-✗ "Cara kerja..." (tanpa tanda tanya)
-✗ "Penyair melakukan pemilihan kata" (bukan pertanyaan)
 
 Konteks Dokumen:
 {context}
@@ -32,6 +37,7 @@ PENTING:
 - Array "questions" harus HANYA mengandung 1 objek pertanyaan-jawaban.
 - Jangan sertakan penjelasan atau teks apapun di luar format JSON.
 - Pastikan setiap pertanyaan diakhiri dengan tanda tanya (?).
+- Pertanyaan dan jawaban harus bebas dari referensi ke dokumen atau teks.
 
 Format JSON yang dihasilkan harus PERSIS sebagai berikut:
 {{
@@ -56,23 +62,27 @@ Kriteria Pembuatan Soal:
 - Hasilkan TEPAT {num_questions} pasangan pertanyaan dan jawaban yang berbeda-beda.
 - Pertanyaan harus mendalam dan menguji pemahaman konseptual.
 - WAJIB: Setiap pertanyaan HARUS diakhiri dengan tanda tanya (?) untuk menunjukkan bahwa ini adalah pertanyaan.
-- Jawaban harus singkat (maksimal 3 kalimat), akurat, dan informasinya diambil SECARA EKSPLISIT dari dokumen.
-- PENTING: JANGAN PERNAH mengawali pertanyaan atau jawaban dengan frasa seperti "Berdasarkan dokumen...", "Menurut teks...", atau "Dari konteks...". Langsung tuliskan inti pertanyaan dan jawabannya.
+- Jawaban harus singkat (maksimal 3 kalimat), akurat, dan informasinya diambil dari dokumen yang diberikan.
+- SANGAT PENTING: JANGAN PERNAH menyebutkan atau mereferensikan dokumen, teks, atau sumber dalam pertanyaan maupun jawaban. Contoh yang DILARANG: "berdasarkan teks", "menurut dokumen", "dalam teks", "disebutkan dalam teks", "informasi yang diberikan", "dari bacaan", "sesuai teks", "yang disebutkan", dll.
+- Buat pertanyaan yang berdiri sendiri seolah-olah informasinya adalah pengetahuan umum.
 - Gunakan Bahasa Indonesia yang baku dan jelas.
 - Pastikan pertanyaan menggunakan kata tanya seperti: Apa, Mengapa, Bagaimana, Kapan, Di mana, Siapa, atau Jelaskan.
 - Buat pertanyaan yang beragam dan tidak repetitif.
 
 Format Pertanyaan yang Benar:
-✓ "Apa yang dimaksud dengan...?"
-✓ "Mengapa penyair melakukan...?"
-✓ "Bagaimana cara kerja...?"
-✓ "Jelaskan pengertian...?"
-✓ "Sebutkan contoh...?"
+✓ "Apa perbedaan mendasar cara hidup manusia pada Zaman Paleolitikum dan Mesolitikum?"
+✓ "Mengapa teknologi pertanian menjadi penting pada Zaman Neolitikum?"
+✓ "Bagaimana sistem pemerintahan Kesultanan Aceh?"
+✓ "Jelaskan ciri-ciri kebudayaan Mesolitikum?"
+✓ "Sebutkan dua contoh alat yang digunakan pada Zaman Neolitikum?"
+✓ "Siapa sultan terkenal dari Kesultanan Aceh?"
 
 Format yang SALAH (hindari):
+✗ "Apa perbedaan mendasar cara hidup manusia pada Zaman Paleolitikum dan Mesolitikum berdasarkan teks?"
+✗ "Sebutkan dua contoh alat yang digunakan pada Zaman Neolitikum menurut teks?"
+✗ "Siapa sultan terkenal dari Kesultanan Aceh yang disebutkan dalam dokumen?"
+✗ "Kapan periode Kesultanan Aceh yang disebutkan dalam teks?"
 ✗ "Pengertian dari..." (tanpa tanda tanya)
-✗ "Cara kerja..." (tanpa tanda tanya)
-✗ "Penyair melakukan pemilihan kata" (bukan pertanyaan)
 
 Konteks Dokumen:
 {context}
@@ -82,6 +92,7 @@ PENTING:
 - Jangan sertakan penjelasan atau teks apapun di luar format JSON.
 - Pastikan setiap pertanyaan diakhiri dengan tanda tanya (?).
 - Buat pertanyaan yang beragam untuk menguji berbagai aspek pemahaman.
+- Pertanyaan dan jawaban harus bebas dari referensi ke dokumen atau teks.
 
 Format JSON yang dihasilkan harus sebagai berikut:
 {{
