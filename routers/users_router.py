@@ -58,7 +58,7 @@ async def create_user(
         password=hashed_password, 
         fullname=user.fullname,  
         role_id=user.role_id,
-        is_seeded=False  # New users are never seeded
+        is_seeded=False  
     )
     db.add(db_user)
     db.commit()

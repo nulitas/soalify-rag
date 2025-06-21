@@ -122,7 +122,7 @@ def buat_pdf_bahasa_indonesia():
         story.append(Spacer(1, 0.2*inch))
         
         # Isi
-        paragraf = Paragraph(isi, styles['Normal'])
+        paragraf = Paragraph(isi.replace("\n", "<br/>"), styles['Normal'])
         story.append(paragraf)
         story.append(Spacer(1, 0.3*inch))
     
@@ -130,129 +130,199 @@ def buat_pdf_bahasa_indonesia():
     print(f"✅ PDF '{filename}' berhasil dibuat!")
     return filename
 
-def buat_pdf_sejarah():
-    """SEJARAH INDONESIA - untuk test RAG"""
-    filename = "sejarah_indonesia.pdf"
+def buat_pdf_matematika():
+    """MATEMATIKA - untuk test RAG"""
+    filename = "matematika.pdf"
     
     doc = SimpleDocTemplate(filename, pagesize=A4)
     story = []
     styles = getSampleStyleSheet()
     
     # Judul
-    title = Paragraph("SEJARAH INDONESIA", styles['Title'])
+    title = Paragraph("MATEMATIKA", styles['Title'])
     story.append(title)
     story.append(Spacer(1, 0.5*inch))
     
     content = [
-        ("MASA PRASEJARAH", """
-        Masa prasejarah adalah masa ketika manusia belum mengenal tulisan. Di Indonesia, masa ini dibagi menjadi beberapa zaman.
+        ("ALJABAR", """
+        Aljabar adalah cabang matematika yang menggunakan huruf dan simbol untuk mewakili bilangan dalam persamaan dan rumus.
         
-        ZAMAN BATU:
+        VARIABEL DAN KONSTANTA:
         
-        1. ZAMAN BATU TUA (PALEOLITIKUM)
-        Manusia hidup dengan berburu dan mengumpulkan makanan. Alat-alat masih sangat sederhana.
-        Contoh: kapak perimbas, kapak genggam
-        Manusia purba: Pithecanthropus erectus (Homo erectus)
+        1. VARIABEL
+        Variabel adalah huruf yang mewakili bilangan yang nilainya dapat berubah.
+        Contoh: x, y, z, a, b
         
-        2. ZAMAN BATU TENGAH (MESOLITIKUM)
-        Manusia mulai menetap dan membuat alat dari tulang dan tanduk.
-        Contoh: pebble tools, bone tools
-        Kebudayaan: Kjokkenmoddinger (sampah dapur)
+        2. KONSTANTA
+        Konstanta adalah bilangan yang nilainya tetap.
+        Contoh: 5, -3, π, e
         
-        3. ZAMAN BATU MUDA (NEOLITIKUM)
-        Manusia sudah bercocok tanam dan membuat tembikar.
-        Contoh: kapak persegi, kapak lonjong
-        Kebudayaan: megalitikum (bangunan batu besar)
+        OPERASI ALJABAR:
         
-        4. ZAMAN LOGAM
-        Manusia mengenal logam seperti perunggu dan besi.
-        Contoh: nekara, perhiasan perunggu
+        1. PENJUMLAHAN DAN PENGURANGAN
+        • Suku sejenis dapat dijumlah atau dikurang
+        • 3x + 5x = 8x
+        • 7y - 2y = 5y
+        • 4x + 3y tidak dapat disederhanakan (suku tidak sejenis)
+        
+        2. PERKALIAN
+        • Perkalian variabel: x × x = x²
+        • Perkalian koefisien: 3x × 4y = 12xy
+        • Distributif: a(b + c) = ab + ac
+        
+        3. PEMBAGIAN
+        • x⁶ ÷ x² = x⁴
+        • 15x³ ÷ 3x = 5x²
+        
+        PERSAMAAN LINEAR:
+        
+        Persamaan linear adalah persamaan yang pangkat tertinggi variabelnya adalah 1.
+        Bentuk umum: ax + b = c
+        
+        Contoh penyelesaian:
+        2x + 5 = 13
+        2x = 13 - 5
+        2x = 8
+        x = 4
         """),
         
-        ("KERAJAAN HINDU-BUDDHA", """
-        Kerajaan Hindu-Buddha berkembang di Indonesia sekitar abad ke-4 hingga ke-15 Masehi.
+        ("GEOMETRI", """
+        Geometri adalah cabang matematika yang mempelajari bentuk, ukuran, posisi, dan sifat-sifat ruang.
         
-        KERAJAAN KUTAI (400-1635 M)
-        • Kerajaan Hindu tertua di Indonesia
-        • Terletak di Kalimantan Timur
-        • Raja terkenal: Mulawarman
-        • Bukti: Prasasti Yupa (dalam bahasa Sanskerta)
+        BANGUN DATAR:
         
-        KERAJAAN TARUMANAGARA (358-669 M)
-        • Terletak di Jawa Barat
-        • Raja terkenal: Purnawarman
-        • Bukti: Prasasti Tugu, Prasasti Kebon Kopi
+        1. PERSEGI
+        • Semua sisi sama panjang
+        • Semua sudut 90°
+        • Luas = s × s = s²
+        • Keliling = 4s
         
-        KERAJAAN SRIWIJAYA (671-1377 M)
-        • Kerajaan maritim di Sumatera Selatan
-        • Pusat perdagangan dan penyebaran agama Buddha
-        • Raja terkenal: Balaputradewa
-        • Bukti: Prasasti Kedukan Bukit, Prasasti Talang Tuwo
+        2. PERSEGI PANJANG
+        • Sisi berhadapan sama panjang
+        • Semua sudut 90°
+        • Luas = p × l
+        • Keliling = 2(p + l)
         
-        KERAJAAN MAJAPAHIT (1293-1527 M)
-        • Kerajaan Hindu terbesar di Nusantara
-        • Terletak di Jawa Timur
-        • Raja terkenal: Hayam Wuruk
-        • Mahapatih terkenal: Gajah Mada
-        • Bukti: Kitab Negarakertagama, Kitab Pararaton
+        3. SEGITIGA
+        • Memiliki 3 sisi dan 3 sudut
+        • Jumlah sudut = 180°
+        • Luas = ½ × alas × tinggi
+        • Keliling = a + b + c
+        
+        4. LINGKARAN
+        • Semua titik berjarak sama dari pusat
+        • Luas = πr²
+        • Keliling = 2πr
+        • Diameter = 2 × jari-jari
+        
+        BANGUN RUANG:
+        
+        1. KUBUS
+        • Semua sisi berbentuk persegi
+        • Volume = s³
+        • Luas permukaan = 6s²
+        
+        2. BALOK
+        • Memiliki 6 sisi berbentuk persegi panjang
+        • Volume = p × l × t
+        • Luas permukaan = 2(pl + pt + lt)
+        
+        3. TABUNG
+        • Memiliki 2 lingkaran sebagai alas dan tutup
+        • Volume = πr²t
+        • Luas permukaan = 2πr(r + t)
         """),
         
-        ("KERAJAAN ISLAM", """
-        Kerajaan Islam mulai berkembang di Indonesia pada abad ke-13 dan mencapai puncaknya pada abad ke-16-17.
+        ("STATISTIKA", """
+        Statistika adalah ilmu yang mempelajari cara mengumpulkan, mengolah, menganalisis, dan menyajikan data.
         
-        KERAJAAN SAMUDRA PASAI (1267-1521 M)
-        • Kerajaan Islam pertama di Indonesia
-        • Terletak di Aceh
-        • Raja pertama: Marah Silu (Sultan Malik as-Saleh)
+        JENIS DATA:
         
-        KESULTANAN DEMAK (1475-1554 M)
-        • Kerajaan Islam pertama di Jawa
-        • Pendiri: Raden Patah
-        • Berperan dalam penyebaran Islam di Jawa
+        1. DATA KUALITATIF
+        Data yang berupa kategori atau kualitas.
+        Contoh: warna, jenis kelamin, agama
         
-        KESULTANAN MATARAM (1587-1755 M)
-        • Kerajaan Islam terbesar di Jawa
-        • Pendiri: Panembahan Senopati
-        • Sultan terkenal: Sultan Agung Hanyokrokusumo
-        • Menyerang VOC di Batavia (1628-1629)
+        2. DATA KUANTITATIF
+        Data yang berupa bilangan.
+        Contoh: tinggi badan, berat badan, nilai ujian
         
-        KESULTANAN ACEH (1496-1903 M)
-        • Kerajaan Islam di ujung barat Indonesia
-        • Sultan terkenal: Sultan Iskandar Muda
-        • Menguasai perdagangan di Selat Malaka
-        • Melawan kolonialisme Belanda dan Portugis
+        UKURAN PEMUSATAN DATA:
+        
+        1. MEAN (RATA-RATA)
+        Mean = (jumlah semua data) ÷ (banyak data)
+        Contoh: data 5, 7, 8, 6, 9
+        Mean = (5+7+8+6+9) ÷ 5 = 35 ÷ 5 = 7
+        
+        2. MEDIAN (NILAI TENGAH)
+        Nilai yang berada di tengah setelah data diurutkan.
+        Contoh: data 5, 6, 7, 8, 9
+        Median = 7
+        
+        3. MODUS
+        Nilai yang paling sering muncul.
+        Contoh: data 5, 6, 7, 6, 8, 6
+        Modus = 6
+        
+        PENYAJIAN DATA:
+        
+        1. TABEL
+        Menyajikan data dalam bentuk baris dan kolom
+        
+        2. DIAGRAM BATANG
+        Menggunakan batang untuk menunjukkan frekuensi data
+        
+        3. DIAGRAM LINGKARAN
+        Menggunakan lingkaran yang dibagi menjadi sektor-sektor
+        
+        4. HISTOGRAM
+        Diagram batang untuk data berkelompok
         """),
         
-        ("MASA KOLONIAL", """
-        Masa kolonial dimulai dengan kedatangan bangsa Eropa ke Indonesia pada abad ke-16.
+        ("PELUANG", """
+        Peluang adalah kemungkinan terjadinya suatu kejadian.
         
-        KEDATANGAN PORTUGIS (1512)
-        • Dipimpin oleh Alfonso de Albuquerque
-        • Menguasai Malaka dan Kepulauan Maluku
-        • Tujuan: mencari rempah-rempah (Gold, Glory, Gospel)
+        RUANG SAMPEL DAN KEJADIAN:
         
-        KEDATANGAN BELANDA (1596)
-        • Dipimpin oleh Cornelis de Houtman
-        • Membentuk VOC (Vereenigde Oostindische Compagnie) tahun 1602
-        • Monopoli perdagangan rempah-rempah
-        • Sistem tanam paksa (cultuurstelsel) oleh Johannes van den Bosch
+        1. RUANG SAMPEL (S)
+        Himpunan semua kemungkinan hasil dari suatu percobaan.
+        Contoh: melempar dadu, S = {1, 2, 3, 4, 5, 6}
         
-        PERLAWANAN RAKYAT:
+        2. KEJADIAN (A)
+        Subset dari ruang sampel.
+        Contoh: kejadian muncul bilangan genap = {2, 4, 6}
         
-        1. Perang Diponegoro (1825-1830)
-        • Dipimpin oleh Pangeran Diponegoro
-        • Latar belakang: politik, ekonomi, dan agama
-        • Berakhir dengan penangkapan Diponegoro
+        RUMUS PELUANG:
         
-        2. Perang Padri (1821-1837)
-        • Terjadi di Sumatera Barat
-        • Dipimpin oleh Imam Bonjol, Tuanku Nan Renceh
-        • Konflik antara kaum Padri dan kaum Adat
+        P(A) = n(A) / n(S)
         
-        3. Perang Aceh (1873-1904)
-        • Perlawanan terlama terhadap Belanda
-        • Dipimpin oleh Teuku Umar, Cut Nyak Dhien, Teuku Cik Ditiro
-        • Menggunakan taktik perang gerilya
+        Dimana:
+        • P(A) = peluang kejadian A
+        • n(A) = banyak anggota kejadian A
+        • n(S) = banyak anggota ruang sampel
+        
+        SIFAT-SIFAT PELUANG:
+        
+        1. 0 ≤ P(A) ≤ 1
+        2. P(kejadian pasti) = 1
+        3. P(kejadian mustahil) = 0
+        4. P(A') = 1 - P(A), dimana A' adalah komplemen A
+        
+        CONTOH SOAL:
+        
+        Sebuah dadu dilempar sekali. Berapa peluang muncul bilangan prima?
+        
+        Penyelesaian:
+        • S = {1, 2, 3, 4, 5, 6}, n(S) = 6
+        • Bilangan prima = {2, 3, 5}, n(A) = 3
+        • P(A) = 3/6 = 1/2 = 0,5
+        
+        PELUANG KEJADIAN MAJEMUK:
+        
+        1. PELUANG GABUNGAN
+        P(A ∪ B) = P(A) + P(B) - P(A ∩ B)
+        
+        2. PELUANG IRISAN
+        P(A ∩ B) = P(A) × P(B|A)
         """)
     ]
     
@@ -261,7 +331,7 @@ def buat_pdf_sejarah():
         story.append(subtitle)
         story.append(Spacer(1, 0.2*inch))
         
-        paragraf = Paragraph(isi, styles['Normal'])
+        paragraf = Paragraph(isi.replace("\n", "<br/>"), styles['Normal'])
         story.append(paragraf)
         story.append(Spacer(1, 0.3*inch))
     
@@ -269,211 +339,235 @@ def buat_pdf_sejarah():
     print(f"✅ PDF '{filename}' berhasil dibuat!")
     return filename
 
-def buat_pdf_biologi():
-    """BIOLOGI - untuk test RAG"""
-    filename = "biologi.pdf"
+def buat_pdf_ipa():
+    """IPA (ILMU PENGETAHUAN ALAM) - untuk test RAG"""
+    filename = "ipa.pdf"
     
     doc = SimpleDocTemplate(filename, pagesize=A4)
     story = []
     styles = getSampleStyleSheet()
     
     # Judul
-    title = Paragraph("BIOLOGI", styles['Title'])
+    title = Paragraph("ILMU PENGETAHUAN ALAM", styles['Title'])
     story.append(title)
     story.append(Spacer(1, 0.5*inch))
     
     content = [
-        ("SEL", """
-        Sel adalah unit struktural dan fungsional terkecil dari makhluk hidup. Semua makhluk hidup tersusun atas sel.
+        ("FISIKA - GERAK", """
+        Gerak adalah perubahan posisi suatu benda terhadap titik acuan dalam selang waktu tertentu.
         
-        TEORI SEL:
-        1. Sel adalah unit struktural terkecil makhluk hidup
-        2. Sel adalah unit fungsional terkecil makhluk hidup  
-        3. Sel berasal dari sel sebelumnya (omnis cellula e cellula)
+        JENIS-JENIS GERAK:
         
-        JENIS-JENIS SEL:
+        1. GERAK LURUS BERATURAN (GLB)
+        • Kecepatan tetap (konstan)
+        • Percepatan = 0
+        • Rumus: s = v × t
+        • Grafik v-t berupa garis lurus mendatar
         
-        1. SEL PROKARIOTIK
-        • Tidak memiliki inti sel yang jelas (tidak bermembran)
-        • Materi genetik tersebar di sitoplasma
-        • Contoh: bakteri, archaea
-        • Organisme: Escherichia coli, Streptococcus
+        2. GERAK LURUS BERUBAH BERATURAN (GLBB)
+        • Percepatan tetap (konstan)
+        • Rumus: v = v₀ + at
+        • Rumus: s = v₀t + ½at²
+        • Rumus: v² = v₀² + 2as
         
-        2. SEL EUKARIOTIK
-        • Memiliki inti sel yang jelas (bermembran)
-        • Materi genetik berada dalam inti sel
-        • Memiliki berbagai organel bermembran
-        • Contoh: sel tumbuhan, sel hewan, sel jamur
+        BESARAN DALAM GERAK:
         
-        ORGANEL SEL:
+        1. JARAK DAN PERPINDAHAN
+        • Jarak: panjang lintasan yang ditempuh (skalar)
+        • Perpindahan: perubahan posisi (vektor)
         
-        1. INTI SEL (NUKLEUS)
-        • Mengatur seluruh aktivitas sel
-        • Mengandung DNA dan RNA
-        • Tempat replikasi DNA dan transkripsi
+        2. KELAJUAN DAN KECEPATAN
+        • Kelajuan: jarak dibagi waktu (skalar)
+        • Kecepatan: perpindahan dibagi waktu (vektor)
         
-        2. MITOKONDRIA
-        • Penghasil energi (ATP) sel
-        • Disebut "rumah tenaga" sel
-        • Memiliki DNA sendiri
+        3. PERCEPATAN
+        • Percepatan: perubahan kecepatan dibagi waktu
+        • Rumus: a = (v - v₀) / t
+        • Satuan: m/s²
         
-        3. RIBOSOM
-        • Tempat sintesis protein
-        • Terdapat di sitoplasma dan retikulum endoplasma
-        
-        4. RETIKULUM ENDOPLASMA (RE)
-        • RE kasar: memiliki ribosom, sintesis protein
-        • RE halus: tidak memiliki ribosom, sintesis lipid
+        GERAK JATUH BEBAS:
+        • Gerak GLBB dengan percepatan = g = 9,8 m/s²
+        • Kecepatan awal = 0
+        • Rumus: h = ½gt²
+        • Rumus: v = gt
         """),
         
-        ("SISTEM PENCERNAAN", """
-        Sistem pencernaan adalah sistem organ yang berfungsi menerima makanan, mencerna, menyerap sari makanan, dan mengeluarkan sisa makanan.
+        ("KIMIA - ATOM DAN MOLEKUL", """
+        Atom adalah partikel terkecil dari suatu unsur yang masih memiliki sifat unsur tersebut.
+        
+        STRUKTUR ATOM:
+        
+        1. INTI ATOM (NUKLEUS)
+        • Terletak di pusat atom
+        • Mengandung proton dan neutron
+        • Bermuatan positif
+        • Massa sangat besar dibanding elektron
+        
+        2. KULIT ELEKTRON
+        • Elektron mengelilingi inti atom
+        • Bermuatan negatif
+        • Massa sangat kecil
+        • Menentukan sifat kimia atom
+        
+        PARTIKEL PENYUSUN ATOM:
+        
+        1. PROTON
+        • Bermuatan +1
+        • Massa = 1 sma (satuan massa atom)
+        • Menentukan nomor atom
+        
+        2. NEUTRON
+        • Bermuatan netral (0)
+        • Massa = 1 sma
+        • Bersama proton membentuk inti atom
+        
+        3. ELEKTRON
+        • Bermuatan -1
+        • Massa = 1/1840 sma (sangat kecil)
+        • Menentukan sifat kimia
+        
+        NOMOR ATOM DAN MASSA ATOM:
+        
+        • Nomor atom (Z) = jumlah proton
+        • Nomor massa (A) = jumlah proton + neutron
+        • Atom netral: jumlah proton = jumlah elektron
+        
+        MOLEKUL:
+        
+        Molekul adalah gabungan dua atau lebih atom yang terikat secara kimia.
+        
+        Contoh:
+        • H₂O (air): 2 atom H + 1 atom O
+        • CO₂ (karbon dioksida): 1 atom C + 2 atom O
+        • NaCl (garam): 1 atom Na + 1 atom Cl
+        
+        IKATAN KIMIA:
+        
+        1. IKATAN IONIK
+        • Terjadi antara logam dan non-logam
+        • Transfer elektron
+        • Contoh: NaCl, MgO
+        
+        2. IKATAN KOVALEN
+        • Terjadi antara non-logam
+        • Pemakaian bersama elektron
+        • Contoh: H₂O, CO₂, CH₄
+        """),
+        
+        ("BIOLOGI - SISTEM PENCERNAAN", """
+        Sistem pencernaan adalah sistem organ yang berfungsi mencerna makanan menjadi zat-zat yang dapat diserap tubuh.
+        
+        PROSES PENCERNAAN:
+        
+        1. PENCERNAAN MEKANIK
+        • Pemecahan makanan secara fisik
+        • Terjadi di mulut (pengunyahan)
+        • Terjadi di lambung (gerakan peristaltik)
+        
+        2. PENCERNAAN KIMIAWI
+        • Pemecahan makanan oleh enzim
+        • Mengubah molekul besar menjadi molekul kecil
+        • Terjadi di mulut, lambung, dan usus halus
         
         ORGAN PENCERNAAN:
         
         1. MULUT
-        • Tempat masuknya makanan
-        • Terjadi pencernaan mekanik (pengunyahan) dan kimiawi (enzim amilase)
-        • Gigi: memotong dan mengunyah makanan
-        • Lidah: membantu menelan dan merasakan
+        • Gigi: memotong dan mengunyah
+        • Lidah: membantu menelan
+        • Kelenjar ludah: menghasilkan enzim amilase
+        • Amilase: mencerna karbohidrat (amilum → maltosa)
         
-        2. KERONGKONGAN (ESOFAGUS)
-        • Menyalurkan makanan dari mulut ke lambung
-        • Panjang sekitar 25 cm
-        • Terjadi gerakan peristaltik
-        
-        3. LAMBUNG
-        • Menyimpan makanan sementara
-        • Mencerna protein dengan enzim pepsin
+        2. LAMBUNG
         • Menghasilkan asam lambung (HCl)
+        • Menghasilkan enzim pepsin
+        • Pepsin: mencerna protein
         • Membunuh bakteri berbahaya
         
-        4. USUS HALUS
-        • Terdiri dari duodenum, jejunum, ileum
-        • Tempat penyerapan sari makanan utama
-        • Panjang sekitar 6-7 meter
-        • Memiliki vili dan mikrovili untuk memperluas permukaan
+        3. USUS HALUS
+        • Duodenum: pencernaan utama
+        • Jejunum dan ileum: penyerapan
+        • Menghasilkan berbagai enzim pencernaan
+        • Memiliki vili untuk memperluas permukaan
         
-        5. USUS BESAR
-        • Menyerap air dan elektrolit
+        4. USUS BESAR
+        • Menyerap air dan mineral
         • Membentuk feses
-        • Mengandung bakteri baik (flora normal)
+        • Mengandung bakteri menguntungkan
         
         KELENJAR PENCERNAAN:
         
         1. HATI
-        • Menghasilkan empedu untuk mencerna lemak
-        • Menetralkan racun (detoksifikasi)
+        • Menghasilkan empedu
+        • Empedu: mengemulsikan lemak
+        • Detoksifikasi racun
         • Menyimpan glikogen
         
         2. PANKREAS
-        • Menghasilkan enzim pencernaan
-        • Menghasilkan hormon insulin dan glukagon
-        • Mengatur kadar gula darah
+        • Menghasilkan enzim lipase, tripsin, kimotripsin
+        • Lipase: mencerna lemak
+        • Tripsin dan kimotripsin: mencerna protein
+        • Menghasilkan hormon insulin
         """),
         
-        ("SISTEM PERNAPASAN", """
-        Sistem pernapasan adalah sistem organ yang berfungsi untuk pertukaran gas (oksigen dan karbon dioksida) antara tubuh dengan lingkungan.
+        ("EKOLOGI", """
+        Ekologi adalah ilmu yang mempelajari hubungan antara makhluk hidup dengan lingkungannya.
         
-        ORGAN PERNAPASAN:
+        KOMPONEN EKOSISTEM:
         
-        1. HIDUNG
-        • Jalan masuk udara
-        • Menyaring, menghangatkan, dan melembabkan udara
-        • Memiliki bulu hidung dan lendir
+        1. KOMPONEN BIOTIK
+        Semua makhluk hidup dalam ekosistem.
         
-        2. FARING
-        • Persimpangan saluran pernapasan dan pencernaan
-        • Tempat bertemunya udara dan makanan
+        • PRODUSEN (AUTOTROF)
+        - Membuat makanan sendiri melalui fotosintesis
+        - Contoh: tumbuhan hijau, alga
         
-        3. LARING
-        • Kotak suara
-        • Mengandung pita suara untuk menghasilkan suara
-        • Memiliki epiglotis untuk menutup saat menelan
+        • KONSUMEN (HETEROTROF)
+        - Konsumen I: herbivora (pemakan tumbuhan)
+        - Konsumen II: karnivora (pemakan daging)
+        - Konsumen III: karnivora tingkat tinggi
         
-        4. TRAKEA
-        • Batang tenggorokan
-        • Panjang sekitar 12 cm
-        • Diperkuat oleh cincin tulang rawan
+        • PENGURAI (DEKOMPOSER)
+        - Menguraikan organisme mati
+        - Contoh: bakteri, jamur
         
-        5. BRONKUS
-        • Percabangan trakea
-        • Bronkus kanan dan kiri masuk ke paru-paru
+        2. KOMPONEN ABIOTIK
+        Semua benda mati dalam ekosistem.
+        Contoh: air, udara, tanah, suhu, cahaya
         
-        6. BRONKIOLUS
-        • Percabangan bronkus yang lebih kecil
-        • Menuju ke alveolus
+        ALIRAN ENERGI:
         
-        7. ALVEOLUS
-        • Kantong udara kecil di ujung bronkiolus
-        • Tempat pertukaran gas
-        • Dikelilingi kapiler darah
-        • Jumlah sekitar 300 juta di kedua paru-paru
+        Matahari → Produsen → Konsumen I → Konsumen II → Konsumen III
         
-        MEKANISME PERNAPASAN:
+        • Energi mengalir satu arah
+        • Setiap perpindahan, energi berkurang
+        • Piramida energi: semakin ke atas semakin kecil
         
-        1. INSPIRASI (menghirup)
-        • Diafragma berkontraksi dan turun
-        • Otot antar tulang rusuk berkontraksi
-        • Rongga dada membesar
-        • Udara masuk ke paru-paru
+        RANTAI MAKANAN DAN JARING MAKANAN:
         
-        2. EKSPIRASI (menghembuskan)
-        • Diafragma relaksasi dan naik
-        • Otot antar tulang rusuk relaksasi
-        • Rongga dada mengecil
-        • Udara keluar dari paru-paru
-        """),
+        1. RANTAI MAKANAN
+        Aliran makanan dari satu organisme ke organisme lain.
+        Contoh: Rumput → Kelinci → Ular → Elang
         
-        ("SISTEM PEREDARAN DARAH", """
-        Sistem peredaran darah adalah sistem organ yang berfungsi mengedarkan darah ke seluruh tubuh untuk mengangkut oksigen, nutrisi, dan zat-zat penting lainnya.
+        2. JARING MAKANAN
+        Kumpulan rantai makanan yang saling berhubungan.
         
-        KOMPONEN DARAH:
+        SIKLUS MATERI:
         
-        1. PLASMA DARAH
-        • Bagian cair darah (55% dari volume darah)
-        • Mengandung air, protein, glukosa, dan zat terlarut lainnya
-        • Mengangkut zat-zat makanan dan sisa metabolisme
+        1. SIKLUS AIR
+        Evaporasi → Kondensasi → Presipitasi → Infiltrasi
         
-        2. SEL DARAH MERAH (ERITROSIT)
-        • Mengangkut oksigen dan karbon dioksida
-        • Mengandung hemoglobin
-        • Berbentuk cakram bikonkaf
-        • Jumlah: 4-5 juta per mm³ darah
+        2. SIKLUS KARBON
+        CO₂ di atmosfer → Fotosintesis → Respirasi → CO₂
         
-        3. SEL DARAH PUTIH (LEUKOSIT)
-        • Sistem pertahanan tubuh
-        • Melawan infeksi dan penyakit
-        • Jumlah: 4.000-11.000 per mm³ darah
-        • Jenis: neutrofil, limfosit, monosit, eosinofil, basofil
+        3. SIKLUS NITROGEN
+        Fiksasi nitrogen → Nitrifikasi → Denitrifikasi
         
-        4. KEPING DARAH (TROMBOSIT)
-        • Berperan dalam pembekuan darah
-        • Mencegah pendarahan berlebihan
-        • Jumlah: 150.000-450.000 per mm³ darah
+        KESEIMBANGAN EKOSISTEM:
         
-        ORGAN PEREDARAN DARAH:
-        
-        1. JANTUNG
-        • Pompa darah
-        • Memiliki 4 ruang: 2 atrium dan 2 ventrikel
-        • Atrium kanan: menerima darah kotor
-        • Ventrikel kanan: memompa darah ke paru-paru
-        • Atrium kiri: menerima darah bersih dari paru-paru
-        • Ventrikel kiri: memompa darah ke seluruh tubuh
-        
-        2. PEMBULUH DARAH
-        • Arteri: membawa darah dari jantung
-        • Vena: membawa darah ke jantung
-        • Kapiler: tempat pertukaran zat
-        
-        PEREDARAN DARAH:
-        
-        1. PEREDARAN DARAH KECIL (PULMONAL)
-        Jantung → Paru-paru → Jantung
-        
-        2. PEREDARAN DARAH BESAR (SISTEMIK)
-        Jantung → Seluruh tubuh → Jantung
+        • Populasi organisme saling mempengaruhi
+        • Predator mengontrol populasi prey
+        • Gangguan dapat merusak keseimbangan
+        • Contoh: peningkatan populasi tikus karena berkurangnya ular
         """)
     ]
     
@@ -482,7 +576,7 @@ def buat_pdf_biologi():
         story.append(subtitle)
         story.append(Spacer(1, 0.2*inch))
         
-        paragraf = Paragraph(isi, styles['Normal'])
+        paragraf = Paragraph(isi.replace("\n", "<br/>"), styles['Normal'])
         story.append(paragraf)
         story.append(Spacer(1, 0.3*inch))
     
@@ -490,44 +584,217 @@ def buat_pdf_biologi():
     print(f"✅ PDF '{filename}' berhasil dibuat!")
     return filename
 
-def buat_semua_pdf():
-    """Membuat semua PDF untuk testing"""
-    print("🔧 Membuat 3 PDF mata pelajaran untuk testing...")
+def buat_pdf_komputer():
+    """KOMPUTER - untuk test RAG"""
+    filename = "komputer.pdf"
     
-    try:
-        pdf_files = []
+    doc = SimpleDocTemplate(filename, pagesize=A4)
+    story = []
+    styles = getSampleStyleSheet()
+    
+    # Judul
+    title = Paragraph("ILMU KOMPUTER", styles['Title'])
+    story.append(title)
+    story.append(Spacer(1, 0.5*inch))
+    
+    content = [
+        ("ALGORITMA DAN PEMROGRAMAN", """
+        Algoritma adalah langkah-langkah sistematis untuk menyelesaikan suatu masalah.
         
-        # Buat PDF Bahasa Indonesia
-        print("\n📝 Membuat PDF Bahasa Indonesia...")
-        pdf1 = buat_pdf_bahasa_indonesia()
-        pdf_files.append(pdf1)
+        KARAKTERISTIK ALGORITMA:
         
-        # Buat PDF Sejarah
-        print("\n📜 Membuat PDF Sejarah Indonesia...")
-        pdf2 = buat_pdf_sejarah()
-        pdf_files.append(pdf2)
+        1. INPUT
+        • Memiliki 0 atau lebih masukan
+        • Data yang diperlukan untuk memproses
         
-        # Buat PDF Biologi
-        print("\n🧬 Membuat PDF Biologi...")
-        pdf3 = buat_pdf_biologi()
-        pdf_files.append(pdf3)
+        2. OUTPUT
+        • Memiliki 1 atau lebih keluaran
+        • Hasil dari pemrosesan input
         
-        print(f"\n📚 BERHASIL! Total {len(pdf_files)} PDF telah dibuat:")
-        for i, pdf in enumerate(pdf_files, 1):
-            print(f"   {i}. {pdf}")
-            
-        print("\n💡 Cara menggunakan:")
-        print("1. Pindahkan semua PDF ke folder DATA_PATH")
-        print("2. Jalankan process_documents() untuk setiap PDF")
-        print("3. Gunakan query_rag() untuk generate pertanyaan-jawaban")
-        print("\n🎯 Cocok untuk testing RAG dengan 3 domain pengetahuan berbeda!")
+        3. DEFINITENESS (JELAS)
+        • Setiap langkah harus jelas dan tidak ambigu
+        • Dapat dipahami dengan tepat
         
-        return pdf_files
+        4. FINITENESS (TERBATAS)
+        • Algoritma harus berakhir setelah menjalankan sejumlah langkah
+        • Tidak boleh infinite loop
         
-    except Exception as e:
-        print(f"❌ Error membuat PDF: {str(e)}")
-        print("💡 Pastikan reportlab sudah terinstall: pip install reportlab")
-        return []
+        5. EFFECTIVENESS (EFEKTIF)
+        • Setiap langkah harus dapat dilaksanakan
+        • Menggunakan sumber daya yang wajar
+        
+        STRUKTUR KONTROL:
+        
+        1. SEQUENCE (BERURUTAN)
+        Langkah-langkah dilakukan secara berurutan.
+        Contoh:
+        1. Baca nilai A
+        2. Baca nilai B  
+        3. Hitung C = A + B
+        4. Tampilkan C
+        
+        2. SELECTION (PERCABANGAN)
+        Pemilihan langkah berdasarkan kondisi.
+        
+        • IF-THEN
+        Jika kondisi benar, jalankan aksi
+        
+        • IF-THEN-ELSE
+        Jika kondisi benar jalankan aksi1, selain itu jalankan aksi2
+        
+        3. ITERATION (PERULANGAN)
+        Mengulang langkah-langkah tertentu.
+        
+        • FOR: perulangan dengan jumlah tertentu
+        • WHILE: perulangan selama kondisi benar
+        • REPEAT-UNTIL: perulangan sampai kondisi benar
+        
+        FLOWCHART:
+        
+        Diagram alir yang menggambarkan langkah-langkah algoritma.
+        
+        Simbol-simbol:
+        • Oval: Start/End
+        • Persegi panjang: Proses
+        • Belah ketupat: Keputusan
+        • Jajar genjang: Input/Output
+        • Lingkaran: Konektor
+        """),
+        
+        ("STRUKTUR DATA", """
+        Struktur data adalah cara mengorganisasi dan menyimpan data agar dapat digunakan secara efisien.
+        
+        ARRAY (LARIK):
+        
+        • Kumpulan elemen dengan tipe data sama
+        • Elemen diakses menggunakan indeks
+        • Ukuran tetap (static)
+        • Contoh: A[1], A[2], A[3], ..., A[n]
+        
+        Operasi pada Array:
+        1. Traversal: mengunjungi setiap elemen
+        2. Search: mencari elemen tertentu
+        3. Insert: menambah elemen
+        4. Delete: menghapus elemen
+        5. Sort: mengurutkan elemen
+        
+        LINKED LIST:
+        
+        • Kumpulan node yang saling terhubung
+        • Setiap node berisi data dan pointer ke node berikutnya
+        • Ukuran dinamis
+        • Tidak memerlukan memori yang berurutan
+        
+        Jenis Linked List:
+        1. Single Linked List: pointer ke node berikutnya
+        2. Double Linked List: pointer ke node sebelum dan sesudah
+        3. Circular Linked List: node terakhir menunjuk ke node pertama
+        
+        STACK (TUMPUKAN):
+        
+        • Struktur data LIFO (Last In First Out)
+        • Elemen terakhir yang masuk, pertama yang keluar
+        • Operasi utama: PUSH (menambah) dan POP (mengambil)
+        
+        Aplikasi Stack:
+        • Function call management
+        • Undo operation
+        • Expression evaluation
+        • Browser history
+        
+        QUEUE (ANTRIAN):
+        
+        • Struktur data FIFO (First In First Out)
+        • Elemen pertama yang masuk, pertama yang keluar
+        • Operasi utama: ENQUEUE (menambah) dan DEQUEUE (mengambil)
+        
+        Aplikasi Queue:
+        • Process scheduling
+        • Printer queue
+        • Breadth-first search
+        • Buffer untuk data stream
+        """),
+        
+        ("DATABASE", """
+        Database adalah kumpulan data yang terorganisir dan dapat diakses secara elektronik.
+        
+        KONSEP DATABASE:
+        
+        1. DATA
+        • Fakta mentah yang belum diolah
+        • Contoh: nama, alamat, tanggal lahir
+        
+        2. INFORMASI
+        • Data yang sudah diolah menjadi berguna
+        • Contoh: laporan penjualan, daftar nilai siswa
+        
+        3. DATABASE MANAGEMENT SYSTEM (DBMS)
+        • Software untuk mengelola database
+        • Contoh: MySQL, PostgreSQL, Oracle, SQL Server
+        
+        MODEL RELASIONAL:
+        
+        • Data disimpan dalam tabel-tabel yang saling berhubungan.
+        • TABEL: Terdiri dari baris (record) dan kolom (field).
+        • PRIMARY KEY: Kolom unik yang mengidentifikasi setiap baris.
+        • FOREIGN KEY: Kunci dari satu tabel yang merujuk ke Primary Key di tabel lain untuk membangun relasi.
+        
+        SQL (STRUCTURED QUERY LANGUAGE):
+        
+        • Bahasa standar untuk berinteraksi dengan database relasional.
+        • Perintah utama: SELECT (mengambil data), INSERT (menyisipkan data), UPDATE (memperbarui data), DELETE (menghapus data).
+        """),
 
+        ("JARINGAN KOMPUTER", """
+        Jaringan komputer adalah dua atau lebih komputer yang terhubung untuk berbagi sumber daya dan data.
+        
+        JENIS-JENIS JARINGAN:
+        
+        1. LAN (Local Area Network)
+        • Mencakup area geografis kecil (gedung, sekolah).
+        
+        2. MAN (Metropolitan Area Network)
+        • Mencakup area yang lebih besar seperti kota.
+        
+        3. WAN (Wide Area Network)
+        • Mencakup area geografis yang sangat luas (negara, benua), contohnya adalah Internet.
+        
+        TOPOLOGI JARINGAN:
+        
+        • Cara komputer terhubung dalam jaringan.
+        • Contoh: Bus, Star, Ring, Mesh.
+        
+        PROTOKOL JARINGAN:
+        
+        • Aturan yang mengatur komunikasi data.
+        • TCP/IP (Transmission Control Protocol/Internet Protocol) adalah protokol utama di Internet.
+        • HTTP (Hypertext Transfer Protocol): untuk web.
+        • FTP (File Transfer Protocol): untuk transfer file.
+        """)
+    ]
+    
+    for judul, isi in content:
+        subtitle = Paragraph(judul, styles['Heading2'])
+        story.append(subtitle)
+        story.append(Spacer(1, 0.2*inch))
+        
+        # Ganti newline dengan tag <br/> agar baris baru berfungsi di ReportLab
+        paragraf = Paragraph(isi.replace("\n", "<br/>"), styles['Normal'])
+        story.append(paragraf)
+        story.append(Spacer(1, 0.3*inch))
+    
+    doc.build(story)
+    print(f"✅ PDF '{filename}' berhasil dibuat!")
+    return filename
+
+# --- BAGIAN UTAMA UNTUK MENJALANKAN SEMUA FUNGSI ---
 if __name__ == "__main__":
-    buat_semua_pdf()
+    print("Memulai proses pembuatan PDF...")
+    
+    # Membuat semua file PDF
+    buat_pdf_bahasa_indonesia()
+    buat_pdf_matematika()
+    buat_pdf_ipa()
+    buat_pdf_komputer()
+    
+    print("\nSemua file PDF telah berhasil dibuat.")
