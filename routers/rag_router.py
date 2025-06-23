@@ -16,9 +16,9 @@ from utils import (
     query_rag,
     get_embedding_function,
     process_documents,
-    direct_llm_questions,
-    get_available_documents
 )
+
+from rag_core import (direct_llm_questions, get_available_documents)
 from schemas import QueryRequest
 
 from var import (
