@@ -225,11 +225,16 @@ async def generate_questions(request: QueryRequest):
             result = query_rag(
                 request.query_text, 
                 request.num_questions,
-                selected_documents=getattr(request, 'selected_documents', None)
+                selected_documents=getattr(request, 'selected_documents', None),
+                target_learning_outcome=getattr(request, 'target_learning_outcome', None)
             )
             return {"result": result, "method": "rag"}
         else:
-            result = direct_llm_questions(request.query_text, request.num_questions)
+            result = direct_llm_questions(
+                request.query_text, 
+                request.num_questions,
+                target_learning_outcome=getattr(request, 'target_learning_outcome', None)
+            )
             return {"result": result, "method": "llm"}
     except Exception as e:
         error_msg = f"Error generating questions: {str(e)}"

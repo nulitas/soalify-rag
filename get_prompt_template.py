@@ -1,8 +1,68 @@
-def get_prompt_template(num_questions):
+def get_prompt_template(num_questions, target_learning_outcome=None):
+    """
+    Generate prompt template with optional target learning outcome
+    
+    Args:
+        num_questions: Number of questions to generate
+        target_learning_outcome: Optional specific learning outcome target
+                                Options: "pengetahuan_faktual", "pemahaman_konseptual", 
+                                        "penerapan_prosedural", "analisis_sederhana", "auto"
+    """
+    
+    # Learning outcome mapping
+    learning_outcomes = {
+        "pengetahuan_faktual": {
+            "description": "Pengetahuan faktual (mengingat, mengenali)",
+            "question_types": "Apa, Siapa, Di mana, Kapan",
+            "focus": "Mengingat fakta, data, informasi spesifik dari dokumen"
+        },
+        "pemahaman_konseptual": {
+            "description": "Pemahaman konseptual (menjelaskan, memberikan contoh)",
+            "question_types": "Mengapa, Bagaimana, Jelaskan",
+            "focus": "Memahami konsep, dapat menjelaskan dengan kata-kata sendiri"
+        },
+        "penerapan_prosedural": {
+            "description": "Penerapan prosedural (menggunakan, menyelesaikan)",
+            "question_types": "Bagaimana cara, Sebutkan langkah-langkah",
+            "focus": "Menerapkan prosedur atau langkah-langkah yang dipelajari"
+        },
+        "analisis_sederhana": {
+            "description": "Analisis sederhana (membandingkan, mengklasifikasi)",
+            "question_types": "Bandingkan, Klasifikasikan, Bedakan",
+            "focus": "Menganalisis hubungan antar konsep pada level sederhana"
+        }
+    }
+    
+    # Build learning outcome instruction
+    if target_learning_outcome and target_learning_outcome != "auto":
+        if target_learning_outcome in learning_outcomes:
+            outcome_instruction = f"""
+TARGET CAPAIAN PEMBELAJARAN SPESIFIK:
+User telah menentukan target capaian pembelajaran: {learning_outcomes[target_learning_outcome]['description']}
+
+FOKUS PEMBUATAN SOAL:
+- Prioritas utama: {learning_outcomes[target_learning_outcome]['focus']}
+- Jenis pertanyaan yang diutamakan: {learning_outcomes[target_learning_outcome]['question_types']}
+- Semua pertanyaan harus mengarah pada pencapaian target pembelajaran ini
+- Tetap sesuaikan dengan level pendidikan (SD/SMP) yang terdeteksi dari dokumen
+"""
+        else:
+            outcome_instruction = """
+TARGET CAPAIAN PEMBELAJARAN: AUTO DETECT
+Sistem akan mendeteksi target capaian pembelajaran secara otomatis berdasarkan analisis dokumen.
+"""
+    else:
+        outcome_instruction = """
+TARGET CAPAIAN PEMBELAJARAN: AUTO DETECT  
+Sistem akan mendeteksi target capaian pembelajaran secara otomatis berdasarkan analisis dokumen.
+"""
+
     if num_questions == 1:
-        template = """
+        template = f"""
 Kamu adalah guru profesional yang ahli membuat soal ujian berkualitas tinggi.
 Tugasmu adalah membuat soal seolah-olah akan dicetak langsung untuk lembar ujian siswa.
+
+{outcome_instruction}
 
 LANGKAH PERTAMA - ANALISIS LEVEL EDUKASI DAN VALIDASI:
 Sebelum membuat soal, analisis dokumen untuk menentukan level edukasi yang tepat berdasarkan:
@@ -44,53 +104,56 @@ Kriteria Pembuatan Soal (HANYA jika materi SD/SMP):
 - Buat pertanyaan yang berdiri sendiri seolah-olah informasinya adalah pengetahuan umum.
 - Gunakan Bahasa Indonesia yang baku dan sesuai level pendidikan SD/SMP.
 
-Contoh Penyesuaian Level:
-- SD: "Apa warna daun pada umumnya?"
-- SMP: "Mengapa daun berwarna hijau?"
-
 Konteks Dokumen:
-{context}
+{{context}}
 
 PENTING:
 - Tentukan level edukasi dari analisis dokumen terlebih dahulu
 - Jika level terlalu tinggi (SMA/Perguruan Tinggi), kembalikan status error
-- Identifikasi target pencapaian pembelajaran secara otomatis
+- Identifikasi target pencapaian pembelajaran secara otomatis ATAU ikuti target yang diberikan user
 - Output harus dalam format JSON valid yang dapat diparse oleh Python
 
 Format JSON jika materi SESUAI (SD/SMP):
-{{
+{{{{
   "questions": [
-    {{
-      "question": "Pertanyaan yang disesuaikan dengan level SD/SMP?",
-      "answer": "Jawaban yang sesuai kompleksitas level SD/SMP."
-    }}
+    {{{{
+      "question": "Pertanyaan yang disesuaikan dengan level SD/SMP dan target capaian pembelajaran?",
+      "answer": "Jawaban yang sesuai kompleksitas level SD/SMP.",
+      "learning_outcome_achieved": "Pencapaian pembelajaran spesifik dari pertanyaan ini"
+    }}}}
   ],
-  "metadata": {{
+  "metadata": {{{{
     "count": 1,
     "education_level": "SD/SMP",
-    "learning_outcome": "Pengetahuan faktual/Pemahaman konseptual/Penerapan prosedural/Analisis sederhana",
+    "target_learning_outcome": "{'User-specified' if target_learning_outcome and target_learning_outcome != 'auto' else 'Auto-detected'}",
+    "actual_learning_outcome": "Pencapaian pembelajaran yang benar-benar dicapai",
     "level_reasoning": "Alasan singkat pemilihan level berdasarkan analisis dokumen",
+    "outcome_reasoning": "Alasan pemilihan target capaian pembelajaran",
     "status": "success"
-  }}
-}}
+  }}}}
+}}}}
 
 Format JSON jika materi TERLALU TINGGI:
-{{
+{{{{
   "questions": [],
-  "metadata": {{
+  "metadata": {{{{
     "count": 0,
     "education_level": "Terlalu Tinggi",
-    "learning_outcome": "Tidak dapat diproses",
+    "target_learning_outcome": "{'User-specified' if target_learning_outcome and target_learning_outcome != 'auto' else 'Auto-detected'}",
+    "actual_learning_outcome": "Tidak dapat diproses",
     "level_reasoning": "Materi memerlukan tingkat pendidikan SMA atau lebih tinggi",
+    "outcome_reasoning": "Level materi terlalu tinggi untuk diproses",
     "status": "error",
     "error_message": "Level pencapaian materi terlalu tinggi. Sistem hanya dapat memproses materi tingkat SD dan SMP."
-  }}
-}}
+  }}}}
+}}}}
 """
     else:
-        template = """
+        template = f"""
 Kamu adalah guru profesional yang ahli membuat soal ujian berkualitas tinggi.
 Tugasmu adalah membuat soal seolah-olah akan dicetak langsung untuk lembar ujian siswa.
+
+{outcome_instruction}
 
 LANGKAH PERTAMA - ANALISIS LEVEL EDUKASI DAN VALIDASI:
 Sebelum membuat soal, analisis dokumen untuk menentukan level edukasi yang tepat berdasarkan:
@@ -122,7 +185,7 @@ Target Pencapaian Pembelajaran yang Dapat Dideteksi:
 - Analisis sederhana (membandingkan, mengklasifikasi)
 
 Kriteria Pembuatan Soal (HANYA jika materi SD/SMP):
-- Hasilkan TEPAT {num_questions} pasangan pertanyaan dan jawaban yang berbeda-beda.
+- Hasilkan TEPAT {{num_questions}} pasangan pertanyaan dan jawaban yang berbeda-beda.
 - Sesuaikan tingkat kesulitan dan vocabulary dengan level SD/SMP saja.
 - Untuk SD: Gunakan bahasa sederhana, pertanyaan faktual langsung
 - Untuk SMP: Kombinasi fakta dan pemahaman sederhana  
@@ -133,52 +196,59 @@ Kriteria Pembuatan Soal (HANYA jika materi SD/SMP):
 - Gunakan Bahasa Indonesia yang baku dan sesuai level pendidikan SD/SMP.
 - Buat pertanyaan yang beragam dan tidak repetitif.
 
-Panduan Kata Tanya yang Diizinkan:
-- SD: Apa, Siapa, Di mana, Kapan (faktual sederhana)
-- SMP: Mengapa, Bagaimana (pemahaman dan penerapan sederhana)
+Panduan Distribusi Soal Berdasarkan Target Capaian:
+- Jika target spesifik diberikan user: Semua soal fokus pada target tersebut
+- Jika auto-detect: Distribusikan soal secara seimbang sesuai analisis dokumen
+- Pastikan setiap soal jelas mencapai target pembelajaran yang ditentukan
 
 Konteks Dokumen:
-{context}
+{{context}}
 
 PENTING:
 - Tentukan level edukasi dari analisis dokumen terlebih dahulu
 - Jika level terlalu tinggi (SMA/Perguruan Tinggi), kembalikan status error
-- Identifikasi target pencapaian pembelajaran secara otomatis
-- Buat variasi pertanyaan yang tetap sesuai dengan level SD/SMP
+- Identifikasi target pencapaian pembelajaran secara otomatis ATAU ikuti target yang diberikan user
+- Buat variasi pertanyaan yang tetap sesuai dengan level SD/SMP dan target capaian
 - Output harus dalam format JSON valid yang dapat diparse oleh Python
 
 Format JSON jika materi SESUAI (SD/SMP):
-{{
+{{{{
   "questions": [
-    {{
-      "question": "Pertanyaan 1 yang disesuaikan dengan level SD/SMP?",
-      "answer": "Jawaban 1 yang sesuai kompleksitas level SD/SMP."
-    }},
-    {{
-      "question": "Pertanyaan 2 yang disesuaikan dengan level SD/SMP?",
-      "answer": "Jawaban 2 yang sesuai kompleksitas level SD/SMP."
-    }}
+    {{{{
+      "question": "Pertanyaan 1 yang disesuaikan dengan level SD/SMP dan target capaian pembelajaran?",
+      "answer": "Jawaban 1 yang sesuai kompleksitas level SD/SMP.",
+      "learning_outcome_achieved": "Pencapaian pembelajaran spesifik dari pertanyaan ini"
+    }}}},
+    {{{{
+      "question": "Pertanyaan 2 yang disesuaikan dengan level SD/SMP dan target capaian pembelajaran?",
+      "answer": "Jawaban 2 yang sesuai kompleksitas level SD/SMP.",
+      "learning_outcome_achieved": "Pencapaian pembelajaran spesifik dari pertanyaan ini"
+    }}}}
   ],
-  "metadata": {{
-    "count": {num_questions},
+  "metadata": {{{{
+    "count": {{num_questions}},
     "education_level": "SD/SMP",
-    "learning_outcome": "Pengetahuan faktual/Pemahaman konseptual/Penerapan prosedural/Analisis sederhana",
+    "target_learning_outcome": "{'User-specified' if target_learning_outcome and target_learning_outcome != 'auto' else 'Auto-detected'}",
+    "actual_learning_outcome": "Pencapaian pembelajaran yang benar-benar dicapai secara keseluruhan",
     "level_reasoning": "Alasan singkat pemilihan level berdasarkan analisis dokumen",
+    "outcome_reasoning": "Alasan pemilihan/distribusi target capaian pembelajaran",
     "status": "success"
-  }}
-}}
+  }}}}
+}}}}
 
 Format JSON jika materi TERLALU TINGGI:
-{{
+{{{{
   "questions": [],
-  "metadata": {{
+  "metadata": {{{{
     "count": 0,
     "education_level": "Terlalu Tinggi",
-    "learning_outcome": "Tidak dapat diproses",
+    "target_learning_outcome": "{'User-specified' if target_learning_outcome and target_learning_outcome != 'auto' else 'Auto-detected'}",
+    "actual_learning_outcome": "Tidak dapat diproses",
     "level_reasoning": "Materi memerlukan tingkat pendidikan SMA atau lebih tinggi",
+    "outcome_reasoning": "Level materi terlalu tinggi untuk diproses",
     "status": "error",
     "error_message": "Level pencapaian materi terlalu tinggi. Sistem hanya dapat memproses materi tingkat SD dan SMP."
-  }}
-}}
+  }}}}
+}}}}
 """
     return template

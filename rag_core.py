@@ -295,7 +295,8 @@ def get_similarity_search(query_text: str, embedding_function, top_k: int = 5,
     return results
 
 def query_rag(query_text: str, num_questions: int = 1, embedding_function=None, 
-              model=None, selected_documents: Optional[List[str]] = None) -> Dict[str, Any]:
+              model=None, selected_documents: Optional[List[str]] = None,
+              target_learning_outcome: Optional[str] = None) -> Dict[str, Any]:
     """Main RAG query function with keyword-aware retrieval"""
     
     if embedding_function is None:
@@ -326,11 +327,11 @@ def query_rag(query_text: str, num_questions: int = 1, embedding_function=None,
         
         if not filtered_results:
             logger.warning("No relevant context found, using direct generation")
-            return direct_llm_questions(query_text, num_questions)
+            return direct_llm_questions(query_text, num_questions, target_learning_outcome)
             
         context_text = "\n\n---\n\n".join([doc.page_content for doc, _ in filtered_results])
         
-        base_prompt = get_prompt_template(num_questions)
+        base_prompt = get_prompt_template(num_questions, target_learning_outcome)
         keyword_aware_prompt = (
             f"FOKUS PADA KATA KUNCI: '{main_keyword}'\n\n" +
             base_prompt
@@ -355,7 +356,8 @@ def query_rag(query_text: str, num_questions: int = 1, embedding_function=None,
         logger.error(f"Error in RAG query: {e}")
         return _create_error_response(str(e), selected_documents)
 
-def direct_llm_questions(query_text: str, num_questions: int = 1) -> Dict[str, Any]:
+def direct_llm_questions(query_text: str, num_questions: int = 1, 
+                        target_learning_outcome: Optional[str] = None) -> Dict[str, Any]:
     """Generate questions directly from LLM with keyword focus"""
     try:
         start_time = time.time()
@@ -366,7 +368,7 @@ def direct_llm_questions(query_text: str, num_questions: int = 1) -> Dict[str, A
         
         prompt_template_str = (
             f"FOKUS PADA KATA KUNCI: '{main_keyword}'\n\n" +
-            get_prompt_template(num_questions).replace(
+            get_prompt_template(num_questions, target_learning_outcome).replace(
                 "Konteks Dokumen:\n{context}", 
                 f"Buat {num_questions} pasang pertanyaan dan jawaban tentang topik: \"{query_text}\""
             )
@@ -387,12 +389,13 @@ def direct_llm_questions(query_text: str, num_questions: int = 1) -> Dict[str, A
     except Exception as e:
         logger.error(f"Error generating direct questions: {e}")
         return _create_error_response(f"Error in making the question: {str(e)}")
-
+        
 def _generate_llm_response(context_text: str, num_questions: int, model: GeminiLLM, 
-                          prompt_template_str: str = None) -> str:
+                          prompt_template_str: str = None, 
+                          target_learning_outcome: Optional[str] = None) -> str:
     """Generate LLM response with context and custom prompt"""
     if not prompt_template_str:
-        prompt_template_str = get_prompt_template(num_questions)
+        prompt_template_str = get_prompt_template(num_questions, target_learning_outcome)
         
     prompt_template = ChatPromptTemplate.from_template(prompt_template_str)
     
