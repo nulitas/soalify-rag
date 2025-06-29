@@ -125,7 +125,7 @@ Format JSON jika materi SESUAI (SD/SMP):
   "metadata": {{{{
     "count": 1,
     "education_level": "SD/SMP",
-    "target_learning_outcome": "{'User-specified' if target_learning_outcome and target_learning_outcome != 'auto' else 'Auto-detected'}",
+    "target_learning_outcome": "{'Ditentukan oleh pengguna' if target_learning_outcome and target_learning_outcome != 'auto' else 'Terdeteksi Otomatis'}",
     "actual_learning_outcome": "Pencapaian pembelajaran yang benar-benar dicapai",
     "level_reasoning": "Alasan singkat pemilihan level berdasarkan analisis dokumen",
     "outcome_reasoning": "Alasan pemilihan target capaian pembelajaran",
@@ -139,7 +139,7 @@ Format JSON jika materi TERLALU TINGGI:
   "metadata": {{{{
     "count": 0,
     "education_level": "Terlalu Tinggi",
-    "target_learning_outcome": "{'User-specified' if target_learning_outcome and target_learning_outcome != 'auto' else 'Auto-detected'}",
+    "target_learning_outcome": "{'Ditentukan oleh pengguna' if target_learning_outcome and target_learning_outcome != 'auto' else 'Terdeteksi Otomatis'}",
     "actual_learning_outcome": "Tidak dapat diproses",
     "level_reasoning": "Materi memerlukan tingkat pendidikan SMA atau lebih tinggi",
     "outcome_reasoning": "Level materi terlalu tinggi untuk diproses",
@@ -228,7 +228,7 @@ Format JSON jika materi SESUAI (SD/SMP):
   "metadata": {{{{
     "count": {{num_questions}},
     "education_level": "SD/SMP",
-    "target_learning_outcome": "{'User-specified' if target_learning_outcome and target_learning_outcome != 'auto' else 'Auto-detected'}",
+    "target_learning_outcome": "{'Ditentukan oleh pengguna' if target_learning_outcome and target_learning_outcome != 'auto' else 'Terdeteksi Otomatis'}",
     "actual_learning_outcome": "Pencapaian pembelajaran yang benar-benar dicapai secara keseluruhan",
     "level_reasoning": "Alasan singkat pemilihan level berdasarkan analisis dokumen",
     "outcome_reasoning": "Alasan pemilihan/distribusi target capaian pembelajaran",
@@ -242,7 +242,7 @@ Format JSON jika materi TERLALU TINGGI:
   "metadata": {{{{
     "count": 0,
     "education_level": "Terlalu Tinggi",
-    "target_learning_outcome": "{'User-specified' if target_learning_outcome and target_learning_outcome != 'auto' else 'Auto-detected'}",
+    "target_learning_outcome": "{'Ditentukan oleh pengguna' if target_learning_outcome and target_learning_outcome != 'auto' else 'Terdeteksi Otomatis'}",
     "actual_learning_outcome": "Tidak dapat diproses",
     "level_reasoning": "Materi memerlukan tingkat pendidikan SMA atau lebih tinggi",
     "outcome_reasoning": "Level materi terlalu tinggi untuk diproses",
