@@ -1,215 +1,191 @@
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.units import inch
-import os
+"""
+Generator PDF Lengkap untuk Materi Bahasa Indonesia Sekolah Dasar (SD)
+Menggabungkan materi kelas 1-6, tata bahasa, dan kosakata
+menjadi satu dokumen yang komprehensif.
+"""
 
-def buat_pdf_matematika_bertingkat():
-    """MATEMATIKA BERTINGKAT - TK sampai Perkuliahan"""
-    filename = "matematika_bertingkat.pdf"
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import inch
+from reportlab.lib.colors import HexColor
+
+def buat_pdf_rangkuman_lengkap():
+    """
+    Membuat satu PDF yang berisi rangkuman lengkap materi Bahasa Indonesia SD,
+    mencakup semua kelas, tata bahasa, dan kosakata.
+    """
+    filename = "rangkuman_lengkap_bahasa_indonesia_sd.pdf"
     
-    doc = SimpleDocTemplate(filename, pagesize=A4)
+    # Inisialisasi dokumen dengan margin
+    doc = SimpleDocTemplate(
+        filename,
+        pagesize=A4,
+        rightMargin=inch/2,
+        leftMargin=inch/2,
+        topMargin=inch/2,
+        bottomMargin=inch/2
+    )
+    
     story = []
     styles = getSampleStyleSheet()
     
-    # Judul
-    title = Paragraph("MATEMATIKA: DARI TK HINGGA PERKULIAHAN", styles['Title'])
+    # Kustomisasi style untuk judul utama dan subjudul
+    styles['Title'].fontSize = 24
+    styles['Title'].leading = 28
+    styles['Heading1'].fontSize = 18
+    styles['Heading1'].textColor = HexColor('#1E3A8A') # Biru tua
+    styles['Heading2'].fontSize = 14
+    styles['Heading2'].textColor = HexColor('#1D4ED8') # Biru
+    styles['Heading3'].fontSize = 12
+    styles['Heading3'].fontName = 'Helvetica-Bold'
+
+    # --- HALAMAN JUDUL ---
+    title = Paragraph("Rangkuman Lengkap<br/>Bahasa Indonesia<br/>Sekolah Dasar (Kelas 1-6)", styles['Title'])
     story.append(title)
-    story.append(Spacer(1, 0.5*inch))
+    story.append(Spacer(1, 1.5 * inch))
     
-    content = [
-        ("MENGENAL ANGKA", """
-        <b>ANGKA 1-10</b><br/>
-        Belajar mengenal angka dan menghitung benda:<br/>
-        • 1 (satu) = 🍎<br/>
-        • 2 (dua) = 🍎🍎<br/>
-        • 3 (tiga) = 🍎🍎🍎<br/>
-        • 4 (empat) = 🍎🍎🍎🍎<br/>
-        • 5 (lima) = 🍎🍎🍎🍎🍎<br/><br/>
-        
-        <b>PENJUMLAHAN SEDERHANA</b><br/>
-        • 1 + 1 = 2<br/>
-        • 2 + 1 = 3<br/>
-        • 3 + 2 = 5<br/><br/>
-        
-        <b>BENTUK DASAR</b><br/>
-        • Lingkaran ⭕<br/>
-        • Persegi ⬜<br/>
-        • Segitiga 🔺
+    author = Paragraph("Disusun untuk mempermudah proses belajar dan mengajar.", styles['Normal'])
+    story.append(author)
+    story.append(PageBreak())
+
+    # --- BAGIAN 1: MATERI PEMBELAJARAN PER KELAS ---
+    main_title_1 = Paragraph("BAGIAN 1: MATERI PEMBELAJARAN", styles['Heading1'])
+    story.append(main_title_1)
+    story.append(Spacer(1, 0.3 * inch))
+
+    materi_per_kelas = [
+        ("KELAS 1: MENGENAL HURUF & KATA", """
+        <b>HURUF VOKAL:</b> A, I, U, E, O (Contoh: Aku, Ibu, Ular, Elang, Orang)<br/>
+        <b>HURUF KONSONAN:</b> B, C, D, F, G, H, J, K, L, M, N, P, Q, R, S, T, V, W, X, Y, Z (Contoh: Buku, Cinta, Dadu)<br/>
+        <b>SUKU KATA:</b> Penggabungan huruf menjadi suku kata (Contoh: BA-PA → Bapa, MA-MA → Mama, A-DI-K → Adik)<br/>
+        <b>KATA SEDERHANA:</b> Kata-kata dasar terkait keluarga, binatang, buah, dan warna.<br/>
+        <b>KALIMAT SEDERHANA:</b> Kalimat pendek dengan subjek dan predikat (Contoh: Aku suka makan. Ayah pergi kerja.)
         """),
-        
-        ("OPERASI DASAR", """
-        <b>PENJUMLAHAN DAN PENGURANGAN</b><br/>
-        • 25 + 17 = 42<br/>
-        • 50 - 23 = 27<br/>
-        • Penjumlahan bersusun ke bawah<br/>
-        • Pengurangan dengan meminjam<br/><br/>
-        
-        <b>PERKALIAN DAN PEMBAGIAN</b><br/>
-        • Tabel perkalian 1-10<br/>
-        • 7 × 8 = 56<br/>
-        • 72 ÷ 9 = 8<br/>
-        • Perkalian bersusun<br/><br/>
-        
-        <b>BANGUN DATAR</b><br/>
-        • Persegi: Luas = s × s<br/>
-        • Persegi panjang: Luas = p × l<br/>
-        • Segitiga: Luas = ½ × a × t<br/>
-        • Lingkaran: Luas = π × r²
+        ("KELAS 2: MEMBACA & MENULIS", """
+        <b>MEMBACA LANCAR:</b> Membaca kata dengan suku kata banyak dan lafal yang tepat.<br/>
+        <b>MENULIS TEGAK BERSAMBUNG:</b> Latihan menulis rapi dengan huruf kapital dan kecil.<br/>
+        <b>KALIMAT TANYA:</b> Menggunakan kata tanya Apa, Siapa, Di mana, Kapan, Mengapa, Bagaimana.<br/>
+        <b>DONGENG SEDERHANA:</b> Memahami isi cerita dan pesan moral dari dongeng seperti "Kancil dan Buaya".<br/>
+        <b>PUISI ANAK:</b> Belajar membaca puisi sederhana dengan ekspresi yang sesuai.
         """),
-        
-        ("ALJABAR DASAR", """
-        <b>BILANGAN BULAT</b><br/>
-        • Bilangan positif: 1, 2, 3, ...<br/>
-        • Bilangan negatif: -1, -2, -3, ...<br/>
-        • Operasi: 5 + (-3) = 2<br/>
-        • Operasi: (-4) × (-2) = 8<br/><br/>
-        
-        <b>ALJABAR SEDERHANA</b><br/>
-        • Variabel: x, y, z<br/>
-        • Suku sejenis: 3x + 5x = 8x<br/>
-        • Persamaan linear: 2x + 5 = 13<br/>
-        • Penyelesaian: x = 4<br/><br/>
-        
-        <b>GEOMETRI</b><br/>
-        • Sudut: lancip, tumpul, siku-siku<br/>
-        • Teorema Pythagoras: a² + b² = c²<br/>
-        • Bangun ruang: kubus, balok, tabung
+        ("KELAS 3: KOSAKATA & KALIMAT", """
+        <b>KOSAKATA BARU:</b> Mengenal sinonim (persamaan kata) dan antonim (lawan kata).<br/>
+        <b>JENIS KATA:</b> Membedakan kata benda (meja), kata kerja (makan), dan kata sifat (baik).<br/>
+        <b>UNSUR KALIMAT (SPOK):</b> Memahami Subjek, Predikat, Objek, dan Keterangan. (Contoh: Ani (S) membaca (P) buku (O) di perpustakaan (K)).<br/>
+        <b>JENIS KALIMAT:</b> Mengenal kalimat berita, tanya, perintah, dan seru.<br/>
+        <b>PANTUN ANAK:</b> Memahami struktur pantun (sampiran dan isi).
         """),
-        
-        ("FUNGSI DAN TRIGONOMETRI", """
-        <b>FUNGSI</b><br/>
-        • Definisi: f(x) = 2x + 3<br/>
-        • Domain dan range<br/>
-        • Fungsi linear: y = mx + c<br/>
-        • Fungsi kuadrat: y = ax² + bx + c<br/><br/>
-        
-        <b>TRIGONOMETRI</b><br/>
-        • sin θ = depan/miring<br/>
-        • cos θ = samping/miring<br/>
-        • tan θ = depan/samping<br/>
-        • Identitas: sin²θ + cos²θ = 1<br/><br/>
-        
-        <b>LOGARITMA</b><br/>
-        • log₁₀ 100 = 2<br/>
-        • ln e = 1<br/>
-        • Sifat: log(a×b) = log a + log b
+        ("KELAS 4: PARAGRAF & KARANGAN", """
+        <b>PARAGRAF:</b> Menentukan kalimat utama dan kalimat penjelas dalam sebuah paragraf.<br/>
+        <b>KARANGAN SEDERHANA:</b> Menulis karangan deskripsi (menggambarkan) dan narasi (menceritakan).<br/>
+        <b>SURAT PRIBADI:</b> Mempelajari bagian-bagian surat dan cara menulis surat untuk teman atau keluarga.<br/>
+        <b>TEKS PETUNJUK:</b> Memahami dan membuat teks petunjuk penggunaan sesuatu.<br/>
+        <b>KAMUS KECIL:</b> Menggunakan kamus untuk mencari arti kata, termasuk kata berimbuhan dan kata majemuk.
         """),
-        
-        ("KALKULUS", """
-        <b>LIMIT</b><br/>
-        • lim(x→a) f(x) = L<br/>
-        • lim(x→∞) (1/x) = 0<br/>
-        • Limit tak hingga<br/>
-        • Kontinuitas fungsi<br/><br/>
-        
-        <b>TURUNAN (DIFERENSIAL)</b><br/>
-        • f'(x) = lim(h→0) [f(x+h) - f(x)]/h<br/>
-        • d/dx (xⁿ) = n·xⁿ⁻¹<br/>
-        • d/dx (sin x) = cos x<br/>
-        • Aturan rantai: (f∘g)'(x) = f'(g(x))·g'(x)<br/><br/>
-        
-        <b>INTEGRAL</b><br/>
-        • ∫ f(x) dx = F(x) + C<br/>
-        • ∫ xⁿ dx = xⁿ⁺¹/(n+1) + C<br/>
-        • ∫ₐᵇ f(x) dx = F(b) - F(a)<br/>
-        • Aplikasi: luas daerah, volume benda putar<br/><br/>
-        
-        <b>PERSAMAAN DIFERENSIAL</b><br/>
-        • dy/dx = f(x,y)<br/>
-        • Solusi umum dan khusus<br/>
-        • Aplikasi dalam fisika dan teknik
+        ("KELAS 5: WACANA & TEKS", """
+        <b>JENIS TEKS:</b> Membedakan berbagai jenis teks seperti cerita, informasi, prosedur, deskripsi, dan eksplanasi.<br/>
+        <b>UNSUR INTRINSIK CERITA:</b> Menganalisis tema, tokoh, alur, latar, dan amanat dalam sebuah cerita.<br/>
+        <b>PUISI DAN PANTUN:</b> Mempelajari rima, irama, dan jenis-jenis puisi serta pantun.<br/>
+        <b>DRAMA SEDERHANA:</b> Mengenal naskah drama, dialog, dan bermain peran.<br/>
+        <b>LAPORAN SEDERHANA:</b> Menulis laporan pengamatan atau kegiatan secara objektif dan faktual.
         """),
-        
-        ("MATEMATIKA DISKRIT", """
-        <b>TEORI GRAF</b><br/>
-        • Vertex (simpul) dan edge (sisi)<br/>
-        • Graf berarah dan tak berarah<br/>
-        • Shortest path algorithms<br/>
-        • Aplikasi dalam jaringan komputer<br/><br/>
-        
-        <b>KOMBINATORIKA</b><br/>
-        • Permutasi: P(n,r) = n!/(n-r)!<br/>
-        • Kombinasi: C(n,r) = n!/[r!(n-r)!]<br/>
-        • Prinsip pigeonhole<br/>
-        • Generating functions<br/><br/>
-        
-        <b>TEORI BILANGAN</b><br/>
-        • Bilangan prima dan komposit<br/>
-        • Algoritma Euclidean: GCD(a,b)<br/>
-        • Modular arithmetic<br/>
-        • Aplikasi dalam kriptografi
+        ("KELAS 6: SASTRA & BAHASA", """
+        <b>KARYA SASTRA INDONESIA:</b> Mengenal cerita rakyat, legenda, mitos, dan hikayat dari berbagai daerah.<br/>
+        <b>ANALISIS PUISI:</b> Memahami majas (personifikasi, metafora), diksi (pilihan kata), dan tema puisi.<br/>
+        <b>TEKS NONFIKSI:</b> Membedakan fakta dan opini dalam teks seperti biografi, artikel, dan editorial.<br/>
+        <b>PIDATO:</b> Mempelajari struktur pidato (pembukaan, isi, penutup) dan teknik berpidato.<br/>
+        <b>TATA BAHASA LANJUTAN:</b> Menggunakan kalimat efektif, Ejaan Yang Disempurnakan (EYD), dan tanda baca dengan benar.
         """)
     ]
     
-    for judul, isi in content:
-        # Subjudul dengan warna berbeda
-        subtitle = Paragraph(judul, styles['Heading2'])
-        story.append(subtitle)
-        story.append(Spacer(1, 0.2*inch))
-        
-        # Isi konten
-        paragraf = Paragraph(isi, styles['Normal'])
-        story.append(paragraf)
-        story.append(Spacer(1, 0.4*inch))
-    
-    # Footer
-    footer = Paragraph(
-        "<i>Materi ini disusun secara bertingkat untuk membantu pemahaman matematika dari dasar hingga lanjut.</i>", 
-        styles['Normal']
-    )
-    story.append(footer)
-    
-    doc.build(story)
-    print(f"✅ PDF '{filename}' berhasil dibuat!")
-    return filename
+    for judul, isi in materi_per_kelas:
+        story.append(Paragraph(judul, styles['Heading2']))
+        story.append(Spacer(1, 0.1 * inch))
+        story.append(Paragraph(isi, styles['Normal']))
+        story.append(Spacer(1, 0.2 * inch))
 
-# Fungsi untuk membuat materi yang lebih fokus (alternatif)
-def buat_pdf_matematika_fokus():
-    """MATEMATIKA FOKUS - Hanya konsep inti tiap tingkat"""
-    filename = "matematika_fokus.pdf"
-    
-    doc = SimpleDocTemplate(filename, pagesize=A4)
-    story = []
-    styles = getSampleStyleSheet()
-    
-    title = Paragraph("MATEMATIKA: KONSEP INTI TIAP TINGKAT", styles['Title'])
-    story.append(title)
-    story.append(Spacer(1, 0.5*inch))
-    
-    content = [
-        ("TK: Menghitung 1-10", "Belajar angka dasar dan menghitung benda sederhana."),
-        ("SD: Operasi Hitung", "Penjumlahan, pengurangan, perkalian, pembagian."),
-        ("SMP: Aljabar Dasar", "Variabel, persamaan linear, geometri dasar."),
-        ("SMA: Fungsi & Grafik", "Fungsi matematika, trigonometri, logaritma."),
-        ("S1: Kalkulus", "Limit, turunan, integral, aplikasi."),
-        ("S2: Matematika Lanjut", "Analisis real, aljabar abstrak, topologi.")
+    story.append(PageBreak())
+
+    # --- BAGIAN 2: TATA BAHASA ---
+    main_title_2 = Paragraph("BAGIAN 2: POKOK-POKOK TATA BAHASA", styles['Heading1'])
+    story.append(main_title_2)
+    story.append(Spacer(1, 0.3 * inch))
+
+    tata_bahasa = [
+        ("JENIS KATA (KELAS KATA)", """
+        <b>1. KATA BENDA (NOMINA):</b> Kata yang mengacu pada orang, tempat, hewan, atau benda. (Contoh: guru, pasar, kucing, meja).<br/>
+        <b>2. KATA KERJA (VERBA):</b> Kata yang menyatakan perbuatan atau tindakan. (Contoh: menulis, dibaca, berlari).<br/>
+        <b>3. KATA SIFAT (ADJEKTIVA):</b> Kata yang menerangkan sifat atau keadaan suatu benda. (Contoh: besar, rajin, merah).<br/>
+        <b>4. KATA BILANGAN (NUMERALIA):</b> Kata yang menyatakan jumlah. (Contoh: satu, kedua, setengah).
+        """),
+        ("STRUKTUR KALIMAT", """
+        <b>UNSUR KALIMAT:</b> S (Subjek), P (Predikat), O (Objek), K (Keterangan), Pel (Pelengkap).<br/>
+        <b>JENIS KALIMAT DASAR:</b><br/>
+        • <b>Kalimat Berita:</b> Memberi informasi. (Contoh: Hari ini hujan.)<br/>
+        • <b>Kalimat Tanya:</b> Meminta jawaban. (Contoh: Apakah kamu sudah makan?)<br/>
+        • <b>Kalimat Perintah:</b> Menyuruh melakukan sesuatu. (Contoh: Tutup jendela itu!)<br/>
+        <b>KALIMAT MAJEMUK:</b> Gabungan dua kalimat atau lebih.<br/>
+        • <b>Setara:</b> dihubungkan dengan 'dan', 'atau', 'tetapi'.<br/>
+        • <b>Bertingkat:</b> dihubungkan dengan 'karena', 'ketika', 'jika'.
+        """),
+        ("EJAAN & TANDA BACA (EYD)", """
+        <b>HURUF KAPITAL:</b> Digunakan pada awal kalimat, nama orang, tempat, hari, bulan, dan judul.<br/>
+        <b>TANDA BACA:</b><br/>
+        • <b>Titik (.):</b> Akhir kalimat berita.<br/>
+        • <b>Koma (,):</b> Memisahkan unsur dalam perincian.<br/>
+        • <b>Tanda Tanya (?):</b> Akhir kalimat tanya.<br/>
+        • <b>Tanda Seru (!):</b> Akhir kalimat perintah atau seruan.<br/>
+        <b>PENULISAN KATA DEPAN:</b> 'di', 'ke', 'dari' ditulis terpisah dari kata yang mengikutinya jika menunjukkan tempat. (Contoh: di rumah, ke sekolah).
+        """)
     ]
     
-    for tingkat, deskripsi in content:
-        # Tingkat
-        tingkat_para = Paragraph(f"<b>{tingkat}</b>", styles['Heading3'])
-        story.append(tingkat_para)
-        
-        # Deskripsi
-        desc_para = Paragraph(deskripsi, styles['Normal'])
-        story.append(desc_para)
-        story.append(Spacer(1, 0.3*inch))
-    
-    doc.build(story)
-    print(f"✅ PDF '{filename}' berhasil dibuat!")
-    return filename
+    for judul, isi in tata_bahasa:
+        story.append(Paragraph(judul, styles['Heading2']))
+        story.append(Spacer(1, 0.1 * inch))
+        story.append(Paragraph(isi, styles['Normal']))
+        story.append(Spacer(1, 0.2 * inch))
 
-# Jalankan fungsi
+    story.append(PageBreak())
+
+    # --- BAGIAN 3: KAMUS KOSAKATA DASAR ---
+    main_title_3 = Paragraph("BAGIAN 3: KAMUS KOSAKATA DASAR", styles['Heading1'])
+    story.append(main_title_3)
+    story.append(Spacer(1, 0.3 * inch))
+
+    kosakata = [
+        ("TEMA: KELUARGA", "<b>Ayah:</b> Orang tua laki-laki.<br/><b>Ibu:</b> Orang tua perempuan.<br/><b>Kakak:</b> Saudara yang lebih tua.<br/><b>Adik:</b> Saudara yang lebih muda.<br/><b>Kakek:</b> Ayah dari orang tua kita.<br/><b>Nenek:</b> Ibu dari orang tua kita."),
+        ("TEMA: SEKOLAH", "<b>Guru:</b> Orang yang mengajar.<br/><b>Murid:</b> Orang yang belajar.<br/><b>Kelas:</b> Ruang untuk belajar.<br/><b>Perpustakaan:</b> Tempat membaca dan meminjam buku.<br/><b>Belajar:</b> Kegiatan menuntut ilmu."),
+        ("TEMA: ALAM", "<b>Gunung:</b> Dataran yang sangat tinggi.<br/><b>Sungai:</b> Aliran air yang besar.<br/><b>Laut:</b> Kumpulan air asin yang sangat luas.<br/><b>Hujan:</b> Air yang turun dari langit.<br/><b>Matahari:</b> Bintang yang menjadi pusat tata surya."),
+        ("TEMA: SIFAT", "<b>Rajin:</b> Suka bekerja dan belajar.<br/><b>Jujur:</b> Berkata apa adanya.<br/><b>Baik:</b> Suka menolong.<br/><b>Sopan:</b> Menghormati orang lain.<br/><b>Pintar:</b> Cepat mengerti pelajaran.")
+    ]
+
+    for judul, isi in kosakata:
+        story.append(Paragraph(judul, styles['Heading3']))
+        story.append(Spacer(1, 0.1 * inch))
+        story.append(Paragraph(isi, styles['Normal']))
+        story.append(Spacer(1, 0.2 * inch))
+
+    # --- PENUTUP ---
+    story.append(Spacer(1, 0.5 * inch))
+    footer = Paragraph(
+        "<i>Rangkuman ini dibuat untuk menjadi panduan belajar yang praktis. Teruslah berlatih untuk menguasai Bahasa Indonesia dengan baik!</i>",
+        styles['Italic']
+    )
+    story.append(footer)
+
+    # Membangun PDF
+    try:
+        doc.build(story)
+        print(f"✅ PDF '{filename}' berhasil dibuat!")
+        print("📄 File ini berisi rangkuman lengkap materi, tata bahasa, dan kosakata.")
+    except Exception as e:
+        print(f"❌ Terjadi kesalahan saat membuat PDF: {e}")
+
+# Jalankan fungsi utama
 if __name__ == "__main__":
-    print("Membuat PDF Matematika Bertingkat...")
-    buat_pdf_matematika_bertingkat()
-    
-    print("\nMembuat PDF Matematika Fokus...")
-    buat_pdf_matematika_fokus()
-    
-    print("\n✅ Semua PDF berhasil dibuat!")
-    print("📄 File yang dihasilkan:")
-    print("   - matematika_bertingkat.pdf (Detail)")
-    print("   - matematika_fokus.pdf (Ringkas)")
+    print("📚 Memulai proses pembuatan PDF Rangkuman Lengkap Bahasa Indonesia SD...")
+    print("=" * 60)
+    buat_pdf_rangkuman_lengkap()
+    print("=" * 60)
+    print("🎯 Proses selesai.")

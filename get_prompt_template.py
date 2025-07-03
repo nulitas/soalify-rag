@@ -9,7 +9,6 @@ def get_prompt_template(num_questions, target_learning_outcome=None):
                                         "penerapan_prosedural", "analisis_sederhana", "auto"
     """
     
-    # Learning outcome mapping
     learning_outcomes = {
         "pengetahuan_faktual": {
             "description": "Pengetahuan faktual (mengingat, mengenali)",
@@ -33,7 +32,6 @@ def get_prompt_template(num_questions, target_learning_outcome=None):
         }
     }
     
-    # Build learning outcome instruction
     if target_learning_outcome and target_learning_outcome != "auto":
         if target_learning_outcome in learning_outcomes:
             outcome_instruction = f"""
